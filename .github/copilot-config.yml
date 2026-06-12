@@ -1,0 +1,22 @@
+# Project Configuration — update this file per project
+project:
+  language: Java
+  jdk_version: 25
+  build_tool: Maven   # Maven | Gradle
+
+framework:
+  spring_boot_version: 4.0.6
+  spring_ai_version: 2.0.0-M5
+  ai_model: llama-3.1-8b-instant        # llama-3.1-8b-instant | gpt-4o | claude-3-5-sonnet
+  ai_provider: Groq                     # Groq | OpenAI | Anthropic | Ollama
+
+package:
+  base: io.xprevel.sample.groq_ai
+  test_path: src/test/java/io/xprevel/sample/groq_ai
+  main_path: src/main/java/io/xprevel/sample/groq_ai
+
+testing:
+  framework: JUnit 5 + Mockito          # JUnit 5 + Mockito | TestNG | Spock
+  mutation_tool: PIT                    # PIT | Stryker | mutmut
+  pit_version: 1.17.0
+  pit_junit5_plugin_version: 1.2.1
