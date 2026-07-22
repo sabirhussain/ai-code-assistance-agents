@@ -1,0 +1,390 @@
+# Code Review Finding Patterns
+# Used by code-review skill to generate consistent, structured findings
+
+version: "1.0.0"
+
+violation_patterns:
+  solid:
+    srp:
+      name: "Single Responsibility Principle"
+      severity: "MEDIUM"
+      detection_keywords:
+        - "class has multiple responsibilities"
+        - "mixing business logic and persistence"
+        - "controller contains business logic"
+        - "utility class with unrelated methods"
+      explanation_template: |
+        {ClassName} violates SRP by handling {responsibility1}, {responsibility2}, and {responsibility3}.
+        Multiple responsibilities increase maintenance cost and reduce testability.
+      recommendation_template: |
+        Extract {responsibility2} into dedicated {SuggestedClassName}.
+        Keep {ClassName} focused solely on {responsibility1}.
+      code_example:
+        before: "class UserService { save(), validate(), sendEmail(), audit() }"
+        after: "class UserService { save() } + UserValidator + EmailNotifier + AuditLogger"
+
+    ocp:
+      name: "Open-Closed Principle"
+      severity: "MEDIUM"
+      detection_keywords:
+        - "switch statement on type"
+        - "instanceof checks"
+        - "requires modification for new behavior"
+      explanation_template: |
+        Code requires modification to add new {featureType} types.
+        Violates OCP - should be open for extension, closed for modification.
+      recommendation_template: |
+        Replace conditional logic with polymorphism or Strategy pattern.
+        Use interface + implementations for {featureType} variations.
+
+    lsp:
+      name: "Liskov Substitution Principle"
+      severity: "MEDIUM"
+      detection_keywords:
+        - "UnsupportedOperationException in subclass"
+        - "broken inheritance"
+        - "behavioral contract violation"
+      explanation_template: |
+        Subclass {SubclassName} violates contract of {SuperclassName}.
+      recommendation_template: |
+        Redesign inheritance hierarchy or use composition instead.
+
+    isp:
+      name: "Interface Segregation Principle"
+      severity: "MEDIUM"
+      detection_keywords:
+        - "fat interface"
+        - "unused methods in implementation"
+      explanation_template: |
+        Interface {InterfaceName} forces clients to depend on unused methods.
+      recommendation_template: |
+        Split into smaller, role-specific interfaces.
+
+    dip:
+      name: "Dependency Inversion Principle"
+      severity: "HIGH"
+      detection_keywords:
+        - "depends on concrete implementation"
+        - "tight coupling between layers"
+        - "manual object creation"
+        - "new keyword for dependencies"
+      explanation_template: |
+        {ClassName} depends directly on concrete {ConcreteType}, creating tight coupling.
+        Prevents mocking and violates DIP.
+      recommendation_template: |
+        Depend on {InterfaceType} abstraction instead.
+        Inject dependency via constructor using Spring DI.
+
+  dry:
+    duplication:
+      severity: "MEDIUM"
+      detection_keywords:
+        - "duplicate business logic"
+        - "repeated validation"
+        - "repeated mapping"
+        - "copy-paste code blocks"
+      explanation_template: |
+        Code block repeated in {location1}, {location2}, and {location3}.
+        Violates DRY - changes require updates in multiple places.
+      recommendation_template: |
+        Extract common logic to private method or dedicated {ComponentType}.
+        Single source of truth improves maintainability.
+
+  kiss:
+    over_engineering:
+      severity: "LOW"
+      detection_keywords:
+        - "deep nesting"
+        - "over-engineered abstraction"
+        - "excessive design patterns"
+        - "unnecessary generic types"
+      explanation_template: |
+        {FeatureName} uses {complexPattern} when simpler approach would suffice.
+        Unnecessary complexity reduces readability and maintainability.
+      recommendation_template: |
+        Replace with direct {simplerApproach}.
+        Prefer simplicity unless complexity provides clear value.
+
+anti_patterns:
+  spring_di:
+    field_injection:
+      severity: "MEDIUM"
+      detection_regex: "@Autowired\\s+(private|protected)\\s+\\w+\\s+\\w+;"
+      explanation_template: |
+        Field injection detected. Prevents constructor-based testing and hides dependencies.
+      recommendation_template: |
+        Use constructor injection with Lombok @RequiredArgsConstructor.
+      code_example:
+        before: "@Autowired private UserService service;"
+        after: "@RequiredArgsConstructor class Facade { private final UserService service; }"
+
+    service_locator:
+      severity: "HIGH"
+      detection_keywords:
+        - "applicationContext.getBean"
+        - "BeanFactory.getBean"
+      explanation_template: |
+        Service Locator pattern detected. Creates hidden dependencies and tight coupling to Spring.
+      recommendation_template: |
+        Inject dependencies via constructor instead of pulling from context.
+
+    circular_dependency:
+      severity: "HIGH"
+      detection_keywords:
+        - "circular reference"
+        - "dependency cycle"
+      explanation_template: |
+        Circular dependency between {ClassA} and {ClassB} detected.
+      recommendation_template: |
+        Introduce intermediate service or use event-driven approach to break cycle.
+
+    business_logic_in_config:
+      severity: "MEDIUM"
+      detection_keywords:
+        - "complex logic in @Configuration"
+        - "business rules in @Bean method"
+      explanation_template: |
+        Business logic found in configuration class.
+      recommendation_template: |
+        Move business logic to dedicated service or component.
+
+  testability:
+    hidden_dependency:
+      severity: "HIGH"
+      detection_keywords:
+        - "new keyword in business logic"
+        - "creates dependency inside method"
+      explanation_template: |
+        Hidden dependency created via 'new {DependencyType}()'.
+        Cannot be mocked, prevents effective unit testing.
+      recommendation_template: |
+        Inject {DependencyType} via constructor as @Mock-able dependency.
+
+    static_dependency:
+      severity: "MEDIUM"
+      detection_keywords:
+        - "static utility calls"
+        - "LocalDateTime.now()"
+        - "UUID.randomUUID()"
+        - "System.currentTimeMillis()"
+        - "Instant.now()"
+      explanation_template: |
+        Static call to {StaticMethod} produces non-deterministic behavior.
+        Difficult to test reliably.
+      recommendation_template: |
+        Inject abstraction (Clock, IdGenerator, ConfigProvider) instead.
+
+    hard_coded_value:
+      severity: "LOW"
+      detection_keywords:
+        - "magic number"
+        - "hard-coded limit"
+        - "embedded configuration"
+      explanation_template: |
+        Hard-coded value {value} found in business logic.
+        Reduces configurability and testability.
+      recommendation_template: |
+        Move to @ConfigurationProperties or domain constant.
+
+    excessive_dependencies:
+      severity: "MEDIUM"
+      detection_keywords:
+        - "too many constructor parameters"
+        - "5+ dependencies"
+      threshold: 5
+      explanation_template: |
+        {ClassName} has {count} constructor dependencies, indicating potential SRP violation.
+      recommendation_template: |
+        Refactor into smaller, focused components or use facade pattern.
+
+security_patterns:
+  secrets:
+    password:
+      severity: "HIGH"
+      detection_regex: "(password|passwd|pwd)\\s*=\\s*['\"]\\w+['\"]"
+      explanation_template: "Hardcoded password detected. Credentials may be exposed."
+      recommendation_template: "Move to environment variable or secret vault (AWS Secrets Manager, Azure Key Vault)."
+
+    api_key:
+      severity: "HIGH"
+      detection_regex: "(apikey|api_key|api-key|apiKey)\\s*=\\s*['\"]\\w+['\"]"
+      explanation_template: "Hardcoded API key detected."
+      recommendation_template: "Externalize to secret management system."
+
+    token:
+      severity: "HIGH"
+      detection_regex: "(token|secret|privateKey|clientSecret)\\s*=\\s*['\"].+['\"]"
+      explanation_template: "Hardcoded secret detected."
+      recommendation_template: "Use Spring externalized configuration with secret vault."
+
+    connection_string:
+      severity: "HIGH"
+      detection_regex: "(jdbc:|mongodb:|redis:)//[^\\s]+"
+      explanation_template: "Hardcoded connection string detected."
+      recommendation_template: "Externalize to application.yml with environment-specific profiles."
+
+  logging:
+    sensitive_data:
+      severity: "HIGH"
+      detection_keywords:
+        - "log.*password"
+        - "log.*token"
+        - "log.*secret"
+        - "log.*credentials"
+      explanation_template: |
+        Sensitive data logged: {logStatement}.
+        May expose credentials or PII in log files.
+      recommendation_template: |
+        Remove sensitive data from logs. Mask or redact if logging is necessary.
+
+    exception_stack_trace:
+      severity: "MEDIUM"
+      detection_keywords:
+        - "e.printStackTrace()"
+      explanation_template: "printStackTrace() exposes internal details and bypasses logging framework."
+      recommendation_template: "Use log.error(\"Message\", exception) instead."
+
+jdk_modernization:
+  jdk8:
+    optional:
+      severity: "LOW"
+      detection_pattern: "if\\s*\\(\\w+\\s*!=\\s*null\\)"
+      suggestion: "Consider Optional<T> for null-safe handling"
+      example: "Optional.ofNullable(value).map(...).orElse(default)"
+
+    stream_api:
+      severity: "LOW"
+      detection_keywords:
+        - "for loop over collection"
+        - "iterator pattern"
+      suggestion: "Consider Stream API for functional-style collection processing"
+      example: "list.stream().filter(...).map(...).collect(Collectors.toList())"
+
+    lambda:
+      severity: "LOW"
+      detection_keywords:
+        - "anonymous inner class"
+      suggestion: "Replace anonymous class with lambda expression"
+      example: "list.forEach(item -> process(item))"
+
+    try_with_resources:
+      severity: "LOW"
+      detection_keywords:
+        - "finally block for resource cleanup"
+      suggestion: "Use try-with-resources for automatic resource management"
+      example: "try (InputStream in = ...) { ... }"
+
+  jdk11:
+    string_methods:
+      severity: "LOW"
+      detection_keywords:
+        - "trim().isEmpty()"
+      suggestion: "Use String.isBlank() (JDK 11+)"
+      example: "if (str.isBlank()) { ... }"
+
+    files_api:
+      severity: "LOW"
+      detection_keywords:
+        - "Files.readAllLines"
+        - "BufferedReader for file reading"
+      suggestion: "Use Files.readString() / Files.writeString() (JDK 11+)"
+      example: "String content = Files.readString(Path.of(\"file.txt\"));"
+
+  jdk17:
+    switch_expression:
+      severity: "LOW"
+      detection_pattern: "switch.*\\{\\s*case.*:\\s*break;"
+      suggestion: "Use switch expression (JDK 17+)"
+      example: "return switch(value) { case A -> result1; case B -> result2; };"
+
+    text_block:
+      severity: "LOW"
+      detection_keywords:
+        - "multi-line string concatenation"
+        - "String with \\n"
+      suggestion: "Use text blocks for multi-line strings (JDK 17+)"
+      example: 'String sql = """ SELECT * FROM users WHERE id = ? """;'
+
+    pattern_matching:
+      severity: "LOW"
+      detection_pattern: "instanceof.*\\{\\s*\\w+\\s+\\w+\\s*=\\s*\\(\\w+\\)"
+      suggestion: "Use pattern matching for instanceof (JDK 17+)"
+      example: "if (obj instanceof String s) { return s.length(); }"
+
+    records:
+      severity: "LOW"
+      detection_keywords:
+        - "immutable DTO"
+        - "data class"
+        - "POJO with only getters"
+      suggestion: "Use record for immutable data carriers (JDK 17+)"
+      example: "public record UserDTO(String id, String name, String email) {}"
+
+    sealed_classes:
+      severity: "LOW"
+      detection_keywords:
+        - "restricted inheritance"
+        - "limited subclasses"
+      suggestion: "Consider sealed classes for controlled inheritance (JDK 17+)"
+      example: "public sealed interface Shape permits Circle, Square {}"
+
+report_template:
+  header: |
+    ================================================================================
+    CODE REVIEW REPORT
+    ================================================================================
+  sections:
+    - name: "Review Scope"
+      format: "text_block"
+      required: true
+    - name: "Files Reviewed"
+      format: "numbered_list"
+      required: true
+    - name: "Summary"
+      format: "count_table"
+      required: true
+      fields:
+        - "High Findings"
+        - "Medium Findings"
+        - "Low Findings"
+    - name: "Findings"
+      format: "structured_blocks"
+      required: true
+      block_template: |
+        [{Severity}] {Category}
+        File: {FilePath}
+        Line: {LineNumber}
+        
+        Issue:
+        {IssueDescription}
+        
+        Why It Matters:
+        {Explanation}
+        
+        Recommendation:
+        {Recommendation}
+        
+        ------------------------------------------------------------
+
+severity_levels:
+  high:
+    description: "Security risks, serious architectural violations, testability blockers"
+    examples:
+      - "Exposed secrets"
+      - "Circular dependencies"
+      - "Service locator pattern"
+      - "Hidden dependencies preventing testing"
+  medium:
+    description: "SOLID violations, DI anti-patterns, significant duplication"
+    examples:
+      - "Field injection"
+      - "SRP violations"
+      - "Tight coupling"
+      - "DRY violations"
+  low:
+    description: "Modernization opportunities, minor improvements"
+    examples:
+      - "JDK feature suggestions"
+      - "Code style improvements"
+      - "Minor refactoring opportunities"
+

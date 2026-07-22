@@ -4,6 +4,21 @@
 > Read that file to determine the active JDK, Spring Boot version, Spring AI version,
 > AI model, base package, and testing framework for this project.
 
+## Token Economy Rules (ALWAYS FOLLOW FIRST)
+
+**Critical: Apply these rules before any code generation or review:**
+
+1. **CACHE CONFIGURATION** — Read `.github/copilot-config.yml` ONCE at session start, cache all values, never re-read
+2. **CACHE PATTERNS** — Read `.github/test-patterns.yml` and `.github/review-patterns.yml` ONCE at session start
+3. **NEVER scan entire repository** — Only read files explicitly requested by user
+4. **NEVER use semantic_search** — Unless user explicitly requests "find", "search", or "deep review"
+5. **NEVER read dependency chains** — Don't follow imports or explore related classes without explicit request
+6. **PROGRESSIVE DISCLOSURE** — Ask ONLY required fields first; ask optional fields ONLY if user types 'configure' or '
+   options'
+7. **STOP after sufficient context** — Maximum 3 file reads unless user requests more research
+8. **USE YAML PATTERNS** — Load code generation patterns from `.github/test-patterns.yml` and review patterns from
+   `.github/review-patterns.yml`
+
 ## How to Read Project Config
 
 When answering any question or generating any code for this project:

@@ -35,6 +35,7 @@ git log --oneline $(git merge-base HEAD origin/main)..HEAD
 ### Step 2 — Analyse the diff
 
 From the diff, extract:
+
 - **What changed**: new features, bug fixes, refactors, config changes, test additions
 - **Why it changed** (infer from commit messages and code intent)
 - **Scope of impact**: which modules / layers are affected (e.g., controller, service, repository)
@@ -88,6 +89,7 @@ Output the following template filled in with real content. Keep it concise but c
 ---
 
 ### Rules
+
 - Omit sections that have nothing to say (e.g., no "Removed" entries → drop that section).
 - Use present tense and active voice throughout ("Add X", not "Added X" or "Adds X").
 - Do NOT include the raw diff or commit hashes in the output.

@@ -1,0 +1,235 @@
+# Test Pattern Definitions for TDD Agent
+# Variables: {Domain}, {InterfaceType}, {ImplType}, {fieldName}, {sut}, {mockDep}, {method}, {params}, {ReturnType}, {expected}
+
+version: "1.0.0"
+
+test_patterns:
+  controller:
+    description: "REST endpoint unit test with MockMvc"
+    test_framework: "@ExtendWith(MockitoExtension.class)"
+    field_pattern: "private {InterfaceType} {sut} = new {ImplType}({mockedDeps});"
+    additional_fields:
+      - "private MockMvc mockMvc;"
+    setup_required: true
+    setup_pattern: |
+      @BeforeEach
+      void setUp() {
+          mockMvc = MockMvcBuilders.standaloneSetup({sut}).build();
+      }
+    default_mocks:
+      - "{Domain}Service"
+    test_structure:
+      arrange: "when({serviceMock}.{method}({params})).thenReturn({dto});"
+      act_assert: |
+        mockMvc.perform({httpMethod}("{endpoint}"))
+               .andExpect(status().{expectedStatus}())
+               .andExpect(jsonPath("$.{field}").value({expected}));
+    required_imports:
+      - "org.junit.jupiter.api.BeforeEach"
+      - "org.junit.jupiter.api.Test"
+      - "org.junit.jupiter.api.extension.ExtendWith"
+      - "org.mockito.Mock"
+      - "org.mockito.junit.jupiter.MockitoExtension"
+      - "org.springframework.test.web.servlet.MockMvc"
+      - "org.springframework.test.web.servlet.setup.MockMvcBuilders"
+      - "static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*"
+      - "static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*"
+      - "static org.mockito.Mockito.*"
+    validation:
+      must_contain:
+        - "@ExtendWith(MockitoExtension.class)"
+        - "MockMvc mockMvc"
+        - "@BeforeEach"
+        - "MockMvcBuilders.standaloneSetup"
+      must_not_contain:
+        - "@InjectMocks"
+        - "@SpringBootTest"
+        - "WebTestClient"
+
+  service:
+    description: "Service layer unit test with mocked repositories"
+    test_framework: "@ExtendWith(MockitoExtension.class)"
+    field_pattern: "private {InterfaceType} {sut} = new {ImplType}({mockedDeps});"
+    setup_required: false
+    default_mocks:
+      - "{Domain}Repository"
+    test_structure:
+      arrange: "when({mockDep}.{method}({params})).thenReturn({value});"
+      act: "{ReturnType} result = {sut}.{methodUnderTest}({params});"
+      assert:
+        - "assertThat(result).isEqualTo({expected});"
+        - "verify({mockDep}).{method}({params});"
+    required_imports:
+      - "org.junit.jupiter.api.Test"
+      - "org.junit.jupiter.api.extension.ExtendWith"
+      - "org.mockito.ArgumentCaptor"
+      - "org.mockito.Mock"
+      - "org.mockito.junit.jupiter.MockitoExtension"
+      - "static org.assertj.core.api.Assertions.assertThat"
+      - "static org.assertj.core.api.Assertions.assertThatThrownBy"
+      - "static org.mockito.Mockito.*"
+    validation:
+      must_contain:
+        - "@ExtendWith(MockitoExtension.class)"
+        - "@Mock"
+        - "// Arrange"
+        - "// Act"
+        - "// Assert"
+      must_not_contain:
+        - "@InjectMocks"
+        - "@SpringBootTest"
+        - "@Transactional"
+
+  component:
+    description: "Component/Helper/Utils unit test - minimal mocking"
+    test_framework: "@ExtendWith(MockitoExtension.class)"
+    field_pattern: "private {ComponentType} {sut} = new {ComponentType}({mockedDeps});"
+    setup_required: false
+    default_mocks: [ ]
+    test_structure:
+      act: "{ReturnType} result = {sut}.{methodUnderTest}({params});"
+      assert: "assertThat(result).isEqualTo({expected});"
+    required_imports:
+      - "org.junit.jupiter.api.Test"
+      - "org.junit.jupiter.api.extension.ExtendWith"
+      - "org.mockito.junit.jupiter.MockitoExtension"
+      - "static org.assertj.core.api.Assertions.assertThat"
+    validation:
+      must_contain:
+        - "@ExtendWith(MockitoExtension.class)"
+        - "@Test"
+
+  repository:
+    description: "Custom repository implementation with mocked EntityManager/JdbcTemplate"
+    test_framework: "@ExtendWith(MockitoExtension.class)"
+    field_pattern: "private {InterfaceType} {sut} = new {ImplType}({persistenceMock});"
+    setup_required: false
+    default_mocks:
+      - "EntityManager (for JPA)"
+      - "JdbcTemplate (for JDBC)"
+    test_structure:
+      arrange: |
+        var query = mock(TypedQuery.class);
+        when({entityManager}.createNamedQuery({queryName}, {EntityType}.class)).thenReturn(query);
+        when(query.setParameter({paramName}, {paramValue})).thenReturn(query);
+        when(query.getSingleResult()).thenReturn({expectedEntity});
+      act: "{ReturnType} result = {sut}.{methodUnderTest}({params});"
+      assert:
+        - "assertThat(result).isEqualTo({expected});"
+        - "verify({entityManager}).createNamedQuery({queryName}, {EntityType}.class);"
+    required_imports:
+      - "jakarta.persistence.EntityManager"
+      - "jakarta.persistence.TypedQuery"
+      - "org.junit.jupiter.api.Test"
+      - "org.junit.jupiter.api.extension.ExtendWith"
+      - "org.mockito.Mock"
+      - "org.mockito.junit.jupiter.MockitoExtension"
+      - "static org.assertj.core.api.Assertions.assertThat"
+      - "static org.mockito.Mockito.*"
+    validation:
+      must_contain:
+        - "@Mock"
+        - "EntityManager"
+
+dependency_inference_rules:
+  # Key format: {sut_type}:{keyword_pattern}
+  service:default:
+    - "{Domain}Repository"
+  service:email|notification|send:
+    - "EmailSender"
+    - "NotificationSender"
+  service:token|jwt|auth:
+    - "TokenGenerator"
+    - "JwtProvider"
+  service:password|hash|encode:
+    - "PasswordEncoder"
+  service:event|publish:
+    - "ApplicationEventPublisher"
+  controller:default:
+    - "{Domain}Service"
+  repository:jpa:
+    - "EntityManager"
+  repository:jdbc:
+    - "JdbcTemplate"
+  component:serial|json|marshal|convert|parse:
+    - "ObjectMapper"
+  component:cache|redis:
+    - "RedisTemplate"
+  component:http|client|rest|call:
+    - "RestClient"
+
+assertion_libraries:
+  selection_rule: "Check pom.xml for assertj-core OR spring-boot-starter-test"
+  assertj:
+    condition: "assertj-core OR spring-boot-starter-test present"
+    equality: "assertThat({actual}).isEqualTo({expected})"
+    null_check: "assertThat({actual}).isNotNull()"
+    collection: "assertThat({list}).containsExactly({elements})"
+    exception: "assertThatThrownBy(() -> {code}).isInstanceOf({ExceptionType}.class).hasMessage({message})"
+    import: "static org.assertj.core.api.Assertions.*"
+  junit5:
+    condition: "fallback when AssertJ not available"
+    equality: "assertEquals({expected}, {actual})"
+    null_check: "assertNotNull({actual})"
+    exception: "assertThrows({ExceptionType}.class, () -> {code})"
+    import: "static org.junit.jupiter.api.Assertions.*"
+
+test_coverage_categories:
+  success:
+    description: "Happy path - correct result with valid inputs"
+    min_tests: 1
+    examples:
+      - "Returns expected value/object"
+      - "Calls correct dependency with correct arguments"
+      - "Calls each dependency expected number of times"
+  failure:
+    description: "Error scenarios - correct exception handling"
+    min_tests: 1
+    examples:
+      - "Dependency throws exception → propagates correctly"
+      - "Business rule violated → throws domain exception"
+      - "Resource not found → throws not-found exception"
+  edge_cases:
+    description: "Boundary conditions and atypical inputs"
+    min_tests: 1
+    examples:
+      - "Null input arguments"
+      - "Blank/empty string inputs"
+      - "Empty collections"
+      - "Boundary values (min, max, zero, negative)"
+
+nested_class_rules:
+  threshold: 3
+  description: "When feature has 3+ tests total, nest by category"
+  structure: |
+    @Nested
+    @DisplayName("{FeatureName}")
+    class {FeatureName}Tests {
+        @Nested
+        @DisplayName("Success")
+        class SuccessTests { ... }
+    
+        @Nested
+        @DisplayName("Failure")
+        class FailureTests { ... }
+    
+        @Nested
+        @DisplayName("Edge Cases")
+        class EdgeCaseTests { ... }
+    }
+  file_split_threshold: 8
+  description_split: "When nested class reaches 8+ methods, extract to dedicated file: {ClassName}{Feature}Test.java"
+
+test_method_naming:
+  pattern: "should{ExpectedBehavior}When{Condition}"
+  examples:
+    - "shouldReturnUserWhenUserExists"
+    - "shouldThrowExceptionWhenUserNotFound"
+    - "shouldCalculateTotalWhenItemsAreValid"
+  validation_regex: "^should[A-Z][a-zA-Z0-9]*When[A-Z][a-zA-Z0-9]*$"
+
+test_class_naming:
+  pattern: "{ClassName}Test"
+  note: "Test interface name, not implementation - e.g., UserServiceTest not UserServiceImplTest"
+  validation_regex: "^[A-Z][a-zA-Z0-9]*Test$"
+

@@ -4,6 +4,8 @@
 # Windows
 Thumbs.db
 
+# intellij
+.idea/
 # VS Code local settings
 .vscode/*
 !.vscode/extensions.json
