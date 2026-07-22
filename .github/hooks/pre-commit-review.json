@@ -1,0 +1,12 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "type": "command",
+        "command": "bash .github/hooks/scripts/check-commit.sh",
+        "windows": "bash .github/hooks/scripts/check-commit.sh",
+        "timeout": 10
+      }
+    ]
+  }
+}
