@@ -1,22 +1,45 @@
 # Project Configuration — update this file per project
 project:
   language: Java
-  jdk_version: 25
+  jdk_version: 17
   build_tool: Maven   # Maven | Gradle
 
 framework:
-  spring_boot_version: 4.0.6
-  spring_ai_version: 2.0.0-M5
-  ai_model: llama-3.1-8b-instant        # llama-3.1-8b-instant | gpt-4o | claude-3-5-sonnet
-  ai_provider: Groq                     # Groq | OpenAI | Anthropic | Ollama
+  spring_boot_version: 3.5.11
 
 package:
-  base: io.xprevel.sample.groq_ai
-  test_path: src/test/java/io/xprevel/sample/groq_ai
-  main_path: src/main/java/io/xprevel/sample/groq_ai
+  base: com.hcltech.demo.coding.agent
+  test_path: src/test/java/com/hcltech/demo/coding/agent
+  main_path: src/main/java/com/hcltech/demo/coding/agent
 
 testing:
-  framework: JUnit 5 + Mockito          # JUnit 5 + Mockito | TestNG | Spock
-  mutation_tool: PIT                    # PIT | Stryker | mutmut
-  pit_version: 1.17.0
+  framework: JUnit 5 + Mockito
+  mutation_tool: PIT
   pit_junit5_plugin_version: 1.2.1
+  nested_test: true
+  aaa_comments: true
+
+# Pattern file references for YAML-based code generation
+pattern_files:
+  test_patterns: .github/test-patterns.yml
+  review_patterns: .github/review-patterns.yml
+
+# Token economy settings to minimize token usage
+token_economy:
+  cache_config: true  # Cache this file for session duration
+  cache_patterns: true  # Cache pattern files for session duration
+  progressive_disclosure: true  # Ask required fields first, optional only on request
+  max_context_reads: 3  # Stop researching after N file reads unless explicitly needed
+  avoid_semantic_search: true  # Only use semantic_search when user explicitly requests "find" or "search"
+
+# Session cache - values to remember during agent session
+session_cache:
+  values_to_cache:
+    - project.language
+    - project.jdk_version
+    - framework.spring_boot_version
+    - package.base
+    - package.test_path
+    - testing.framework
+    - testing.nested_test
+  cache_duration: session  # Reset when user starts new conversation

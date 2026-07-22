@@ -7,6 +7,20 @@ description: >
 
 # Skill: Write Failing Unit Test (RED Phase)
 
+## Token Economy Rules (ALWAYS FOLLOW FIRST)
+
+**Critical: Follow these rules to minimize token usage:**
+
+1. **CACHE CONFIG** — Read `.github/copilot-config.yml` and `.github/test-patterns.yml` ONCE at session start, cache
+   values, never re-read
+2. **NEVER scan entire repository** — Only read files explicitly requested by user or required for pattern matching
+3. **NEVER use semantic_search** — Unless user explicitly requests "find" or "search across codebase"
+4. **NEVER read dependency chains** — Only read files directly in scope (the class under test)
+5. **PROGRESSIVE DISCLOSURE** — Ask ONLY required fields (Feature, Dependencies); ask optional fields ONLY if user
+   types 'configure' or 'options'
+6. **STOP after sufficient context** — Maximum 3 file reads unless user requests more research
+7. **USE YAML PATTERNS** — Load patterns from `.github/test-patterns.yml` instead of interpreting prose examples
+
 ## Role
 
 You are a world-class software engineer specializing in TDD. Generate **unit tests only** — never implementation code.
@@ -19,16 +33,17 @@ You are a world-class software engineer specializing in TDD. Generate **unit tes
 
 ## Input Format
 
-Provide the following — `Feature` is **required**; all others are optional but improve output quality:
+Provide the following — fields marked REQUIRED must be supplied; optional fields improve output quality and have smart
+defaults:
 
 ```
-Feature: <description or user story>                ← REQUIRED
-SUT Type: controller|service|component|dao         ← optional (recommended; SUT = System Under Test)
-Class: <ClassName>                                  ← optional
-Method: <methodName(param: Type): ReturnType>       ← optional
-Dependencies: <Dependency1, Dependency2>            ← optional
-Parameterized: yes | no                             ← optional (default: no)
-Test location: <optional override>                  ← optional
+Feature: <description or user story>                              ← REQUIRED
+SUT Type: controller|service|component|repository                 ← REQUIRED (inferred from Feature if omitted)
+Class: <ClassName>                                                ← optional (derived from Feature + SUT Type if omitted)
+Method: <methodName(param: Type): ReturnType>                     ← optional (default: all public methods inferred from Class)
+Dependencies: <Dependency1, Dependency2>                          ← REQUIRED (or `skip` to infer defaults from SUT Type)
+Parameterized: yes | no                                           ← optional (default: no; yes generates @ParameterizedTest variants)
+Test location: <optional override>                                ← optional (default: <test_path>/<sut-type-package>, pick test_path from copilot-config.yml)
 ```
 
 **Note on class naming by SUT Type:**
@@ -36,7 +51,8 @@ Test location: <optional override>                  ← optional
 - `controller` → Test class: `<Feature>ControllerTest` (tests the Impl, field typed as interface)
 - `service` → Test class: `<Feature>ServiceTest` (tests the ServiceImpl, field typed as interface)
 - `component` → Test class: `<Feature>ComponentTest` or `<Feature>HelperTest` or `<Feature>UtilsTest`
-- `dao` → Test class: `<Feature>DaoTest` (tests the DaoImpl, field typed as interface if applicable)
+- `repository` → Test class: `<Feature>RepositoryTest` (tests the RepositoryImpl, field typed as interface if
+  applicable)
 - **Important:** Test class names **NEVER** include "Impl" suffix — test the interface with impl-typed fields (e.g.,
   `private UserService userService = new UserServiceImpl(...)`).
 - **Spring Repository interfaces** (e.g., `UserRepository extends JpaRepository`) are **not** tested at unit level —
@@ -46,10 +62,32 @@ Test location: <optional override>                  ← optional
 When Class is missing, infer SUT Type from Feature description:
 
 - Contains: "endpoint", "HTTP", "GET", "POST", "controller", "request", "response" → `controller`
-- Contains: "service", "orchestrat", "business", "rule", "validat", "transact" → `service`
-- Contains: "query", "fetch", "load", "persist", "database", "table", "entity" → `dao`
+- Contains: "service", "orchestrat", "business", "rule", "validate", "transact" → `service`
+- Contains: "query", "fetch", "load", "persist", "database", "table", "entity" → `repository`
 - Contains: "format", "convert", "calculate", "trim", "parse", "util", "helper" → `component`
 - Default (uncertain) → infer as `service`
+
+#### Dependency Inference Rules
+
+Before asking the user about dependencies, infer a candidate list from **SUT Type + Feature keywords + Class name**.
+Show this inferred list in the question — never ask a blank prompt.
+
+| SUT Type     | Feature / Class keywords                        | Inferred mock candidates                            |
+|--------------|-------------------------------------------------|-----------------------------------------------------|
+| `service`    | any                                             | `*Repository` matching the domain noun in Class     |
+| `service`    | "email", "notification", "send"                 | + `EmailSender` / `NotificationSender`              |
+| `service`    | "token", "jwt", "auth"                          | + `TokenGenerator` / `JwtProvider`                  |
+| `service`    | "password", "hash", "encode"                    | + `PasswordEncoder`                                 |
+| `service`    | "event", "publish"                              | + `ApplicationEventPublisher`                       |
+| `controller` | any                                             | Service interface matching the domain noun in Class |
+| `repository` | any                                             | `EntityManager` (JPA) or `JdbcTemplate` (JDBC)      |
+| `component`  | "serial", "json", "marshal", "convert", "parse" | `ObjectMapper`                                      |
+| `component`  | "cache", "redis"                                | `RedisTemplate`                                     |
+| `component`  | "http", "client", "rest", "call"                | `RestClient` / `WebClient` / `RestTemplate`         |
+| any          | Class constructor params visible in source      | Each constructor param type (best-effort hint)      |
+
+**Rule:** Always produce at least one inferred candidate. If nothing matches, fall back to the most common type-default
+(Service → `*Repository`; Controller → `*Service`; Repository → `EntityManager`; Component → none).
 
 ### When Inputs Are Incomplete
 
@@ -59,32 +97,46 @@ absent) — all other defaults depend on it.
 
 #### Skip keywords
 
-| Keyword    | Effect                                                         |
-|------------|----------------------------------------------------------------|
-| `skip`     | Accept the default for the current question, move to the next  |
-| `skip all` | Accept defaults for all remaining unanswered questions at once |
+| Keyword    | Effect                                                                        |
+|------------|-------------------------------------------------------------------------------|
+| `skip`     | Accept the inferred/default value for the current question, move to the next  |
+| `skip all` | Accept inferred/default values for all remaining unanswered questions at once |
+
+For **Dependencies** specifically, `skip` means **"confirm the inferred list as-is"** — not "use none".
+
+#### Modification verbs for Dependencies
+
+When answering the Dependencies question the user may:
+
+| Input                     | Effect                                               |
+|---------------------------|------------------------------------------------------|
+| `skip`                    | Confirm the inferred list unchanged                  |
+| `+ Dep1, Dep2`            | Add to the inferred list                             |
+| `- Dep1`                  | Remove one or more inferred entries                  |
+| `Dep1, Dep2` (plain list) | Replace the inferred list entirely                   |
+| `none`                    | Clear all inferred deps — generate no `@Mock` fields |
 
 #### Defaults for each skippable field
 
-| Field           | Default when skipped                                                                                                                                |
-|-----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
-| `SUT Type`      | **Inferred from Feature keywords** (see inference rules above). If uncertain, defaults to `service`.                                                |
-| `Class`         | Derived from `Feature` + inferred `SUT Type`: extract noun → PascalCase + type-suffix **without Impl** (e.g., `UserService`, not `UserServiceImpl`) |
-| `Dependencies`  | None — no `@Mock` fields, OR inferred from SUT Type (Service → mock repositories; DAO → mock EntityManager/JdbcTemplate; etc.)                      |
-| `Parameterized` | `no`                                                                                                                                                |
-| `Test location` | **Derived from SUT Type** (only if not provided). Pattern: `<package.test_path>/<SUT-type-subpackage>`                                              |
+| Field           | Default when skipped                                                                                                                                       |
+|-----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `SUT Type`      | **Inferred from Feature keywords** (see inference rules above). If uncertain, defaults to `service`.                                                       |
+| `Class`         | Derived from `Feature` + inferred `SUT Type`: extract noun → PascalCase + type-suffix **without Impl** (e.g., `UserService`, not `UserServiceImpl`)        |
+| `Dependencies`  | **Inferred from SUT Type + Feature keywords + Class name** (see Dependency Inference Rules). `skip` confirms the inferred list — never silently uses none. |
+| `Parameterized` | `no`                                                                                                                                                       |
+| `Test location` | **Derived from SUT Type** (only if not provided). Pattern: `<package.test_path>/<SUT-type-subpackage>`                                                     |
 
 **Package derivation by SUT Type (when test location not provided):**
 
 - `service` → `src/test/java/<base_package>.service`
 - `controller` | `rest` → `src/test/java/<base_package>.resource` (or `.controller`)
-- `dao` → `src/test/java/<base_package>.dao`
+- `repository` → `src/test/java/<base_package>.repository`
 - `component` → `src/test/java/<base_package>.component`
 - `util` | `utils` → `src/test/java/<base_package>.util`
 - `helper` → `src/test/java/<base_package>.helper`
 
 Example: If Feature is "Send password-reset email", inferred SUT Type is `service`, then default test location =
-`src/test/java/io/xprevel/sample/groq_ai/service`
+`<test_path>/service`, pick test_path from copilot-config.yml
 
 #### Question template
 
@@ -94,23 +146,23 @@ Example: If Feature is "Send password-reset email", inferred SUT Type is `servic
 
 ```
 Before I generate the tests, I have a few questions.
-Reply with your answer, or type `skip` to accept the default for that question,
-or type `skip all` to accept defaults for all remaining questions.
+Reply with your answer, or type `skip` to confirm the inferred default for that question,
+or type `skip all` to confirm inferred defaults for all remaining questions.
 
 1. **SUT Type** — What type of component are you testing?
-   *(controller | service | component | dao; default: inferred as `<InferredType>` from Feature)*
+   *(controller | service | component | repository; default: inferred as `<InferredType>` from Feature)*
 
 2. **Class** — What is the name of the class under test?
    *(default: derived from Feature as `<InferredClassName>` — **without** Impl suffix)*
 
-3. **Dependencies** — Does this class depend on any collaborators that should be mocked?
-   *(e.g., `UserRepository`, `EntityManager`, `JdbcTemplate`, `MockMvc`; default: none or type-default)*
+3. **Dependencies** — I inferred these collaborators to mock: `<InferredDep1>`, `<InferredDep2>`
+   Type `skip` to confirm as-is, `+ Dep` to add, `- Dep` to remove, a plain list to replace, or `none` to clear all.
 
 4. **Parameterized** — Should I generate data-driven / parameterized tests?
    *(yes | no; default: no)*
 
 5. **Test location** — Where should the test file be placed?
-   *(default: `<test_path from copilot-config.yml>`)*
+   *(default: `<test_path from copilot-config.yml>/<sut-type-subpackage>`)*
 ```
 
 After the user replies (or skips), confirm the resolved inputs before generating tests:
@@ -120,7 +172,7 @@ After the user replies (or skips), confirm the resolved inputs before generating
   Feature:       <value>
   SUT Type:      <value>         (inferred | provided)
   Class:         <value>         (derived | provided)
-  Dependencies:  <value>         (none | type-default | provided)
+  Dependencies:  <value>         (inferred | confirmed | modified | provided | none)
   Parameterized: <value>
   Test location: <value>         (derived from SUT Type | provided | default from copilot-config.yml)
 ```
@@ -133,26 +185,27 @@ After the user replies (or skips), confirm the resolved inputs before generating
 Feature: Send password-reset email to a registered user
 ```
 
-**Agent infers SUT Type as `service` and asks:**
+**Agent infers SUT Type as `service`, Class as `PasswordResetService`, deps as `UserRepository, EmailSender`, and asks:
+**
 
 ```
 Before I generate the tests, I have a few questions.
-Reply with your answer, type `skip` for that question, or `skip all` to accept all defaults.
+Reply with your answer, type `skip` for that question, or `skip all` to confirm all inferred defaults.
 
 1. **SUT Type** — What type of component are you testing?
-   *(default: service)*
+   *(default: inferred as `service` from Feature)*
 
 2. **Class** — What is the name of the class under test?
-   *(default: `PasswordResetServiceImpl`)*
+   *(default: derived from Feature as `PasswordResetService`)*
 
-3. **Dependencies** — Does this class depend on any collaborators that should be mocked?
-   *(e.g., `UserRepository`, `EmailSender`; default: none)*
+3. **Dependencies** — I inferred these collaborators to mock: `UserRepository`, `EmailSender`
+   Type `skip` to confirm as-is, `+ Dep` to add, `- Dep` to remove, a plain list to replace, or `none` to clear all.
 
 4. **Parameterized** — Should I generate data-driven / parameterized tests?
    *(yes | no; default: no)*
 
 5. **Test location** — Where should the test file be placed?
-   *(default: `src/test/java/io/xprevel/sample/groq_ai`)*
+   *(default: `src/test/java/io/xprevel/sample/groq_ai/service`)*
 ```
 
 **User replies:**
@@ -160,7 +213,7 @@ Reply with your answer, type `skip` for that question, or `skip all` to accept a
 ```
 1. skip
 2. skip
-3. UserRepository, EmailSender
+3. + NotificationAuditLogger
 skip all
 ```
 
@@ -169,48 +222,49 @@ skip all
 ```
 ✅ Resolved inputs:
   Feature:       Send password-reset email to a registered user
-  SUT Type:      service               (inferred)
-  Class:         PasswordResetService  (derived)
-  Dependencies:  UserRepository, EmailSender  (provided)
-  Parameterized: no                    (default)
-  Test location: src/test/java/io/xprevel/sample/groq_ai/service  (derived from SUT Type)
+  SUT Type:      service                                              (inferred)
+  Class:         PasswordResetService                                 (derived)
+  Dependencies:  UserRepository, EmailSender, NotificationAuditLogger (modified — added: NotificationAuditLogger)
+  Parameterized: no                                                   (default)
+  Test location: src/test/java/io/xprevel/sample/groq_ai/service      (derived from SUT Type)
 
 Generating failing tests…
 ```
 
-#### Worked example — DAO Implementation
+#### Worked example — Repository Implementation
 
 **User provides:**
 
 ```
 Feature: Query active users from the database by department
-SUT Type: dao
+SUT Type: repository
 ```
 
-**Agent asks:**
+**Agent infers Class as `UserRepository`, deps as `EntityManager`, and asks:**
 
 ```
 Before I generate the tests, I have a few questions.
-Reply with your answer, type `skip` for that question, or `skip all` to accept all defaults.
+Reply with your answer, type `skip` for that question, or `skip all` to confirm all inferred defaults.
 
 1. **Class** — What is the name of the class under test?
-   *(default: `UserDaoImpl`)*
+   *(default: derived from Feature as `UserRepository`)*
 
-2. **Dependencies** — Does this class depend on any collaborators that should be mocked?
-   *(e.g., `EntityManager`, `JdbcTemplate`; default: none)*
+2. **Dependencies** — I inferred these collaborators to mock: `EntityManager`
+   Type `skip` to confirm as-is, `+ Dep` to add, `- Dep` to remove, a plain list to replace, or `none` to clear all.
 
 3. **Parameterized** — Should I generate data-driven / parameterized tests?
    *(yes | no; default: no)*
 
 4. **Test location** — Where should the test file be placed?
-   *(default: `src/test/java/io/xprevel/sample/groq_ai`)*
+   *(default: `src/test/java/io/xprevel/sample/groq_ai/repository`)*
 ```
 
 **User replies:**
 
 ```
 1. skip
-2. EntityManager
+2. - EntityManager
+   + JdbcTemplate
 skip all
 ```
 
@@ -219,11 +273,11 @@ skip all
 ```
 ✅ Resolved inputs:
   Feature:       Query active users from the database by department
-  SUT Type:      dao                   (provided)
-  Class:         UserDao               (derived)
-  Dependencies:  EntityManager         (provided)
-  Parameterized: no                    (default)
-  Test location: src/test/java/io/xprevel/sample/groq_ai/dao  (derived from SUT Type)
+  SUT Type:      repository                                            (provided)
+  Class:         UserRepository                                        (derived)
+  Dependencies:  JdbcTemplate                                          (modified — removed: EntityManager, added: JdbcTemplate)
+  Parameterized: no                                                    (default)
+  Test location: src/test/java/io/xprevel/sample/groq_ai/repository   (derived from SUT Type)
 
 Generating failing tests…
 ```
@@ -239,194 +293,84 @@ Generating failing tests…
 
 ### Layer-Specific Unit Test Strategy
 
-Unit-test generation differs by SUT Type (System Under Test). Below is the strategy and mandatory constraints for each:
+**Load test patterns from `.github/test-patterns.yml` → `test_patterns.{sut_type}` for:**
+
+- Field instantiation pattern
+- Required imports
+- Setup requirements
+- Default mock dependencies
+- Test structure (Arrange/Act/Assert)
+- Validation rules
+
+Unit-test generation differs by SUT Type (System Under Test). Patterns are defined in YAML for consistency.
 
 #### Controller (REST Endpoint Implementation)
 
-**Test approach:** Direct unit test using `MockMvc` (part of `spring-boot-starter-test`). **NO** `WebTestClient` or
-reactive client style.
+**Pattern:** Load from `test_patterns.controller` in `.github/test-patterns.yml`
 
-**Mandatory constraints:**
+**Key requirements:**
 
-- Use `@ExtendWith(MockitoExtension.class)` + `@Mock` for service/repository dependencies
-- Declare the controller field with **interface type**, instantiate with **impl + mocked constructor deps**
-- Set up `MockMvc` with the controller instance
-- Mock the injected service dependency — **never** invoke the real service
-- Test HTTP status codes, response headers, and deserialized response body assertions
-- Cover endpoint validation (path variables, request params, request body deserialization)
+- Use MockMvc with standalone setup
+- Field typed as interface, instantiated with impl + mocked deps
+- Mock service dependencies
+- Test HTTP status codes, response body, validation
 
-**Imports to expect:**
-
-```java
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-```
-
-**Example test pattern:**
-
-```java
-
-@ExtendWith(MockitoExtension.class)
-class UserControllerTest {
-    @Mock
-    private UserService userService;
-
-    // Field typed as interface, instantiated with impl + mocked deps
-    private UserController userController = new UserControllerImpl(userService);
-    private MockMvc mockMvc;
-
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
-    }
-
-    @Test
-    void shouldReturnOkWithUserDtoWhenUserExists() {
-        // Arrange
-        when(userService.getUser("123")).thenReturn(userDto);
-
-        // Act & Assert
-        mockMvc.perform(get("/users/123"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(123));
-    }
-}
-```
+**Validation:** Must contain MockMvc, @BeforeEach setup, MockMvcBuilders.standaloneSetup. Must NOT contain @InjectMocks,
+@SpringBootTest, WebTestClient.
 
 #### Service Implementation
 
-**Test approach:** Unit test with mocked repository/DAO dependencies; verify business logic and orchestration.
+**Pattern:** Load from `test_patterns.service` in `.github/test-patterns.yml`
 
-**Mandatory constraints:**
+**Key requirements:**
 
-- Use `@ExtendWith(MockitoExtension.class)` + `@Mock` for all repository/DAO dependencies
-- Declare the service field with **interface type**, instantiate with **impl + mocked constructor deps**:
-  ```java
-  private UserService userService = new UserServiceImpl(userRepository, emailSender);
-  ```
-- Mock dependency methods; verify correct method calls with `ArgumentCaptor` and `verify()`
-- Test business rules, validations, and exception handling
-- Do **not** test Spring's `@Transactional` behavior (that's integration-level)
+- Field typed as interface, instantiated with impl + mocked constructor deps
+- Mock repository dependencies
+- Verify method calls with ArgumentCaptor and verify()
+- Test business rules, validations, exception handling
 
-**Example test pattern:**
-
-```java
-
-@ExtendWith(MockitoExtension.class)
-class UserServiceTest {
-    @Mock
-    private UserRepository userRepository;
-    @Mock
-    private EmailSender emailSender;
-
-    // Field typed as interface, instantiated with impl + mocked deps
-    private UserService userService = new UserServiceImpl(userRepository, emailSender);
-
-    @Test
-    void shouldReturnUserWhenUserExists() {
-        // Arrange
-        when(userRepository.findById("123")).thenReturn(Optional.of(user));
-
-        // Act
-        User result = userService.getUser("123");
-
-        // Assert
-        assertThat(result).isEqualTo(user);
-        verify(userRepository).findById("123");
-    }
-}
-```
+**Validation:** Must contain @Mock, AAA comments, assertThat. Must NOT contain @InjectMocks, @SpringBootTest,
+@Transactional.
 
 #### Component / Helper / Utils
 
-**Test approach:** Direct unit test; no mocks unless the class has external dependencies.
+**Pattern:** Load from `test_patterns.component` in `.github/test-patterns.yml`
 
-**Mandatory constraints:**
+**Key requirements:**
 
-- Static utility tests: call methods directly with test inputs
-- Component with dependencies: mock only external collaborators (not internal state)
-- Focus on pure logic, algorithm correctness, and boundary conditions
+- Direct unit test
+- Minimal mocking (only external dependencies)
+- Focus on pure logic and boundary conditions
 
-**Example test pattern:**
+#### Repository (Custom Database Access Implementation)
 
-```java
+**Pattern:** Load from `test_patterns.repository` in `.github/test-patterns.yml`
 
-@ExtendWith(MockitoExtension.class)
-class StringUtilsTest {
-    @Test
-    void shouldReturnTrimmedStringWhenGivenWhitespace() {
-        // Act
-        String result = StringUtils.trim("  hello  ");
+**Key requirements:**
 
-        // Assert
-        assertThat(result).isEqualTo("hello");
-    }
-}
-```
+- Mock EntityManager (JPA) or JdbcTemplate (JDBC)
+- Field typed as interface, instantiated with impl + mocked persistence mechanism
+- Test query logic, parameter binding, result mapping
+- Never test with real database (unit test only)
 
-#### DAO (Custom Database Access Implementation)
+**Note:** Spring Repository interfaces (JpaRepository, CrudRepository) are NOT tested at unit level — tested via
+integration tests.
 
-**Test approach:** Unit test with mocked persistence abstraction (e.g., `EntityManager`, `JdbcTemplate`).
+#### Dependency Inference
 
-**Mandatory constraints:**
+**Load from `.github/test-patterns.yml` → `dependency_inference_rules`**
 
-- Use `@ExtendWith(MockitoExtension.class)` + `@Mock` for persistence mechanism
-- Declare the DAO field with **interface type** (if applicable), instantiate with **impl + mocked constructor deps**
-- Mock the persistence mechanism (EntityManager for JPA, JdbcTemplate for JDBC)
-- Test SQL mapping, query parameter binding, and result set mapping
-- Verify correct DAO method calls on the mocked abstraction
-- **Do NOT** test the DAO with a real database (that's integration-level)
+Default inference by SUT Type:
 
-**Example test pattern (JPA):**
-
-```java
-
-@ExtendWith(MockitoExtension.class)
-class UserDaoTest {
-    @Mock
-    private EntityManager entityManager;
-
-    // Field typed as interface (if DAO interface exists), instantiated with impl + mocked deps
-    private UserDao userDao = new UserDaoImpl(entityManager);
-
-    @Test
-    void shouldReturnUserWhenNamedQueryExecutes() {
-        // Arrange
-        var query = mock(TypedQuery.class);
-        when(entityManager.createNamedQuery("User.findByName", User.class))
-                .thenReturn(query);
-        when(query.setParameter("name", "John"))
-                .thenReturn(query);
-        when(query.getSingleResult()).thenReturn(expectedUser);
-
-        // Act
-        User result = userDao.findByName("John");
-
-        // Assert
-        assertThat(result).isEqualTo(expectedUser);
-        verify(entityManager).createNamedQuery("User.findByName", User.class);
-    }
-}
-```
-
-#### Spring Repository Interface (JpaRepository, CrudRepository, etc.)
-
-**Test approach:** **NOT tested at unit level**. Spring's repository implementations are tested by Spring itself.
-
-**Why no custom unit tests:**
-
-- `@Repository` interfaces extending `JpaRepository`, `CrudRepository`, etc. are Spring's responsibility
-- Custom methods **without implementation** are generated by Spring Data
-- Custom **implemented** methods on repository should be tested as part of integration tests with `@DataJpaTest` or
-  `@SpringBootTest`
-
-**When to test repository-like behavior:**
-
-- Test the **DAO** class (custom DB access implementation) that handles the actual query logic
-- Test the **Service** class that orchestrates repository calls with business logic
+- `service` → {Domain}Repository
+- `service` + (email|notification) keywords → + EmailSender
+- `service` + (token|jwt|auth) keywords → + TokenGenerator/JwtProvider
+- `service` + (password|hash) keywords → + PasswordEncoder
+- `controller` → {Domain}Service
+- `repository:jpa` → EntityManager
+- `repository:jdbc` → JdbcTemplate
+- `component` + (json|serial) keywords → ObjectMapper
+- `component` + (cache|redis) keywords → RedisTemplate
 
 ### Nested Classes & Feature-Split Files (ALWAYS apply)
 
@@ -605,27 +549,24 @@ When a feature has **fewer than 3 tests** in total, flat comments are acceptable
 
 ### Assertions
 
-Check `pom.xml` (or `build.gradle`) for the assertion library before generating tests:
+**Load assertion library patterns from `.github/test-patterns.yml` → `assertion_libraries`**
 
-| Condition                                                   | Library to use                             |
-|-------------------------------------------------------------|--------------------------------------------|
-| `assertj-core` **or** `spring-boot-starter-test` is present | **AssertJ** (preferred)                    |
-| Neither is present                                          | **JUnit 5 built-in** assertions (fallback) |
+**Selection rule:** Check pom.xml for `assertj-core` OR `spring-boot-starter-test`
 
-**When AssertJ is available:**
+**When AssertJ available (preferred):**
 
-- `assertThat(result).isEqualTo(expected)`
-- `assertThat(result).isNotNull()`
-- `assertThat(list).containsExactly(...)`
-- `assertThatThrownBy(() -> ...).isInstanceOf(X.class).hasMessage("...")`
-- Never use `assertTrue(result == x)` — always use fluent assertions
+- Equality: `assertThat(result).isEqualTo(expected)`
+- Null check: `assertThat(result).isNotNull()`
+- Collections: `assertThat(list).containsExactly(...)`
+- Exceptions: `assertThatThrownBy(() -> ...).isInstanceOf(X.class).hasMessage("...")`
 
-**When AssertJ is NOT available (JUnit 5 fallback):**
+**When AssertJ NOT available (JUnit 5 fallback):**
 
-- `assertEquals(expected, actual)`
-- `assertNotNull(result)`
-- `assertThrows(X.class, () -> service.call(...))`
-- `assertAll(...)` to group multiple assertions without short-circuiting
+- Equality: `assertEquals(expected, actual)`
+- Null check: `assertNotNull(result)`
+- Exceptions: `assertThrows(X.class, () -> ...)`
+
+Never use `assertTrue(result == x)` when AssertJ is available — always use fluent assertions.
 
 ### Data-Driven Tests (Parameterized)
 
