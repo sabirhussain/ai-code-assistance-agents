@@ -15,7 +15,7 @@
 #
 # Options:
 #   -y, --yes           Non-interactive mode (use defaults)
-#   -l, --local [PORT]  Local testing mode (default port: 8000)
+#   -l, --local         Local testing mode (copy from current repo directory)
 #   -h, --help          Show this help message
 ################################################################################
 
@@ -35,7 +35,7 @@ INSTALL_DIR="${HOME}/.copilot"
 BACKUP_DIR="${HOME}/.copilot.backup-$(date +%Y%m%d-%H%M%S)"
 NON_INTERACTIVE=false
 LOCAL_MODE=false
-LOCAL_PORT=8000
+LOCAL_REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Color codes for output
 RED='\033[0;31m'
@@ -82,12 +82,11 @@ USAGE:
     bash <(curl -fsSL https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}/github-agent-install.sh)
     
     # Local testing mode
-    ./github-agent-install.sh --local [PORT]
+    ./github-agent-install.sh --local
 
 OPTIONS:
     -y, --yes          Non-interactive mode (use defaults)
-    -l, --local [PORT] Local testing mode using http://localhost:PORT
-                       Default port: 8000
+    -l, --local        Local testing mode (copy files from current repo directory)
     -h, --help         Show this help message
 
 WHAT GETS INSTALLED:
@@ -131,18 +130,18 @@ check_prerequisites() {
     
     # Test network connectivity
     if [ "${LOCAL_MODE}" = true ]; then
-        log_info "Local testing mode: Using http://localhost:${LOCAL_PORT}"
-        log_info "Testing connectivity to local server..."
+        log_info "Local testing mode: Using files from ${LOCAL_REPO_DIR}"
         
-        if ! curl -fsSL --connect-timeout 5 "http://localhost:${LOCAL_PORT}/" &> /dev/null; then
-            log_error "Cannot reach local server at http://localhost:${LOCAL_PORT}"
-            log_error "Please ensure the server is running on the specified port"
+        # Verify .github directory exists
+        if [ ! -d "${LOCAL_REPO_DIR}/.github" ]; then
+            log_error "Local mode requires running from repository root"
+            log_error "Missing directory: ${LOCAL_REPO_DIR}/.github"
             exit 1
         fi
-        log_success "Local server is accessible"
+        log_success "Local repository directory found"
     else
         log_info "Testing connectivity to GitHub..."
-        if ! curl -fsSL --connect-timeout 10 "${REPO_URL}/.github/README.md" &> /dev/null; then
+        if ! curl -fsSL --connect-timeout 10 "${REPO_URL}/.github/about-me.md" &> /dev/null; then
             log_error "Cannot reach GitHub repository."
             log_error "Please check your internet connection and try again."
             log_error "Repository URL: ${REPO_URL}"
@@ -223,15 +222,36 @@ collect_user_input() {
 download_file() {
     local source_path="$1"
     local target_path="$2"
-    local url="${REPO_URL}/${source_path}"
     
-    log_info "Downloading: ${source_path}"
-    
-    if curl -fsSL "${url}" -o "${target_path}"; then
-        return 0
+    if [ "${LOCAL_MODE}" = true ]; then
+        # Local mode: copy from repository directory
+        local local_file="${LOCAL_REPO_DIR}/${source_path}"
+        
+        log_info "Copying (local): ${source_path}"
+        
+        if [ ! -f "${local_file}" ]; then
+            log_error "Local file not found: ${local_file}"
+            return 1
+        fi
+        
+        if cp "${local_file}" "${target_path}"; then
+            return 0
+        else
+            log_error "Failed to copy: ${source_path}"
+            return 1
+        fi
     else
-        log_error "Failed to download: ${source_path}"
-        return 1
+        # Production mode: download from GitHub
+        local url="${REPO_URL}/${source_path}"
+        
+        log_info "Downloading: ${source_path}"
+        
+        if curl -fsSL "${url}" -o "${target_path}"; then
+            return 0
+        else
+            log_error "Failed to download: ${source_path}"
+            return 1
+        fi
     fi
 }
 
@@ -478,11 +498,6 @@ main() {
                 ;;
             -l|--local)
                 LOCAL_MODE=true
-                # Check if next arg is a port number
-                if [[ $# -gt 1 ]] && [[ $2 =~ ^[0-9]+$ ]]; then
-                    LOCAL_PORT=$2
-                    shift
-                fi
                 shift
                 ;;
             -h|--help)
@@ -496,13 +511,6 @@ main() {
                 ;;
         esac
     done
-    
-    # Set REPO_URL based on mode
-    if [ "${LOCAL_MODE}" = true ]; then
-        REPO_URL="http://localhost:${LOCAL_PORT}"
-        log_info "Running in LOCAL TESTING MODE"
-        log_info "Using: ${REPO_URL}"
-    fi
     
     print_header
     
