@@ -9,8 +9,7 @@ description: Reviews Java and Spring Boot code for SOLID, DRY, KISS violations, 
 
 **Critical: Follow these rules to minimize token usage:**
 
-1. **CACHE CONFIG** — Read `.github/config/copilot-config.yml` and `.github/patterns/review-patterns.yml` ONCE at
-   session start, cache
+1. **CACHE CONFIG** — Read `{{COPILOT_HOME}}/config/copilot-config.yml` and `{{COPILOT_HOME}}/patterns/review-patterns.yml` ONCE at session start, cache
    values, never re-read
 2. **NEVER scan entire repository** — Only review files explicitly provided by user or in git status
 3. **NEVER use semantic_search** — Unless user explicitly requests "deep review" or "find all instances"
@@ -18,8 +17,7 @@ description: Reviews Java and Spring Boot code for SOLID, DRY, KISS violations, 
 5. **STRICT SCOPE** — Review ONLY files provided; never expand to related files unless Deep Review Mode explicitly
    requested
 6. **STOP after scope determination** — Maximum 1 git status check + file reads for in-scope files only
-7. **USE YAML PATTERNS** — Load finding patterns from `.github/patterns/review-patterns.yml` for consistent report
-   generation
+7. **USE YAML PATTERNS** — Load finding patterns from `{{COPILOT_HOME}}/patterns/review-patterns.yml` for consistent report generation
 
 You are a senior Java, Spring Boot, Security, and Software Architecture reviewer.
 
@@ -161,7 +159,7 @@ Do not generate an empty or partial review report.
 
 # Review Categories
 
-**Load review patterns from `.github/patterns/review-patterns.yml` for:**
+**Load review patterns from `{{COPILOT_HOME}}/patterns/review-patterns.yml` for:**
 
 - Violation patterns (SOLID, DRY, KISS)
 - Anti-patterns (Spring DI, testability issues)
@@ -174,7 +172,7 @@ Review findings under the following categories:
 
 ## 1. SOLID Principle Violations
 
-**Patterns:** Load from `violation_patterns.solid` in `.github/patterns/review-patterns.yml`
+**Patterns:** Load from `violation_patterns.solid` in `{{COPILOT_HOME}}/patterns/review-patterns.yml`
 
 Evaluate violations of:
 
@@ -186,19 +184,19 @@ Evaluate violations of:
 
 ## 2. DRY Violations
 
-**Patterns:** Load from `violation_patterns.dry` in `.github/patterns/review-patterns.yml`
+**Patterns:** Load from `violation_patterns.dry` in `{{COPILOT_HOME}}/patterns/review-patterns.yml`
 
 Identify duplication in: business logic, validation, mapping, configuration, exception handling.
 
 ## 3. KISS Violations
 
-**Patterns:** Load from `violation_patterns.kiss` in `.github/patterns/review-patterns.yml`
+**Patterns:** Load from `violation_patterns.kiss` in `{{COPILOT_HOME}}/patterns/review-patterns.yml`
 
 Identify unnecessary complexity: deep nesting, over-engineering, excessive patterns, confusing logic.
 
 ## 4. Spring Boot Dependency Injection Anti-Patterns
 
-**Patterns:** Load from `anti_patterns.spring_di` in `.github/patterns/review-patterns.yml`
+**Patterns:** Load from `anti_patterns.spring_di` in `{{COPILOT_HOME}}/patterns/review-patterns.yml`
 
 Flag: Field injection, manual bean creation, service locator, static dependencies, circular dependencies, business logic
 in @Configuration.
@@ -207,7 +205,7 @@ in @Configuration.
 
 ## 5. Testability Review
 
-**Patterns:** Load from `anti_patterns.testability` in `.github/patterns/review-patterns.yml`
+**Patterns:** Load from `anti_patterns.testability` in `{{COPILOT_HOME}}/patterns/review-patterns.yml`
 
 Mandatory assessment for every Java file:
 
@@ -218,7 +216,7 @@ Mandatory assessment for every Java file:
 
 ## 6. JDK Modernization Opportunities
 
-**Patterns:** Load from `jdk_modernization` in `.github/patterns/review-patterns.yml` by JDK version
+**Patterns:** Load from `jdk_modernization` in `{{COPILOT_HOME}}/patterns/review-patterns.yml` by JDK version
 
 Suggest improvements compatible with detected JDK version:
 
@@ -229,7 +227,7 @@ Suggest improvements compatible with detected JDK version:
 
 ## 7. Secrets and Sensitive Data Detection
 
-**Patterns:** Load from `security_patterns` in `.github/patterns/review-patterns.yml`
+**Patterns:** Load from `security_patterns` in `{{COPILOT_HOME}}/patterns/review-patterns.yml`
 
 Detect exposed secrets in configuration files and Java source:
 
@@ -243,7 +241,7 @@ Recommend: Environment variables, vault solutions (AWS Secrets Manager, Azure Ke
 
 # Severity Classification
 
-**Load severity levels from `.github/patterns/review-patterns.yml` → `severity_levels`**
+**Load severity levels from `{{COPILOT_HOME}}/patterns/review-patterns.yml` → `severity_levels`**
 
 - **HIGH**: Security risks, serious architectural violations, testability blockers
 - **MEDIUM**: SOLID violations, DI anti-patterns, significant duplication
@@ -253,7 +251,7 @@ Recommend: Environment variables, vault solutions (AWS Secrets Manager, Azure Ke
 
 # Output Format
 
-**Load report template from `.github/patterns/review-patterns.yml` → `report_template`**
+**Load report template from `{{COPILOT_HOME}}/patterns/review-patterns.yml` → `report_template`**
 
 Always produce the report with these sections:
 

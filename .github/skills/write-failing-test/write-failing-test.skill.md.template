@@ -11,8 +11,7 @@ description: >
 
 **Critical: Follow these rules to minimize token usage:**
 
-1. **CACHE CONFIG** — Read `.github/config/copilot-config.yml` and `.github/patterns/test-patterns.yml` ONCE at session
-   start, cache
+1. **CACHE CONFIG** — Read `{{COPILOT_HOME}}/config/copilot-config.yml` and `{{COPILOT_HOME}}/patterns/test-patterns.yml` ONCE at session start, cache
    values, never re-read
 2. **NEVER scan entire repository** — Only read files explicitly requested by user or required for pattern matching
 3. **NEVER use semantic_search** — Unless user explicitly requests "find" or "search across codebase"
@@ -20,8 +19,7 @@ description: >
 5. **PROGRESSIVE DISCLOSURE** — Ask ONLY required fields (Feature, Dependencies); ask optional fields ONLY if user
    types 'configure' or 'options'
 6. **STOP after sufficient context** — Maximum 3 file reads unless user requests more research
-7. **USE YAML PATTERNS** — Load patterns from `.github/patterns/test-patterns.yml` instead of interpreting prose
-   examples
+7. **USE YAML PATTERNS** — Load patterns from `{{COPILOT_HOME}}/patterns/test-patterns.yml` instead of interpreting prose examples
 
 ## Role
 
@@ -295,7 +293,7 @@ Generating failing tests…
 
 ### Layer-Specific Unit Test Strategy
 
-**Load test patterns from `.github/patterns/test-patterns.yml` → `test_patterns.{sut_type}` for:**
+**Load test patterns from `{{COPILOT_HOME}}/patterns/test-patterns.yml` → `test_patterns.{sut_type}` for:**
 
 - Field instantiation pattern
 - Required imports
@@ -308,7 +306,7 @@ Unit-test generation differs by SUT Type (System Under Test). Patterns are defin
 
 #### Controller (REST Endpoint Implementation)
 
-**Pattern:** Load from `test_patterns.controller` in `.github/patterns/test-patterns.yml`
+**Pattern:** Load from `test_patterns.controller` in `{{COPILOT_HOME}}/patterns/test-patterns.yml`
 
 **Key requirements:**
 
@@ -322,7 +320,7 @@ Unit-test generation differs by SUT Type (System Under Test). Patterns are defin
 
 #### Service Implementation
 
-**Pattern:** Load from `test_patterns.service` in `.github/patterns/test-patterns.yml`
+**Pattern:** Load from `test_patterns.service` in `{{COPILOT_HOME}}/patterns/test-patterns.yml`
 
 **Key requirements:**
 
@@ -336,7 +334,7 @@ Unit-test generation differs by SUT Type (System Under Test). Patterns are defin
 
 #### Component / Helper / Utils
 
-**Pattern:** Load from `test_patterns.component` in `.github/patterns/test-patterns.yml`
+**Pattern:** Load from `test_patterns.component` in `{{COPILOT_HOME}}/patterns/test-patterns.yml`
 
 **Key requirements:**
 
@@ -346,7 +344,7 @@ Unit-test generation differs by SUT Type (System Under Test). Patterns are defin
 
 #### Repository (Custom Database Access Implementation)
 
-**Pattern:** Load from `test_patterns.repository` in `.github/patterns/test-patterns.yml`
+**Pattern:** Load from `test_patterns.repository` in `{{COPILOT_HOME}}/patterns/test-patterns.yml`
 
 **Key requirements:**
 
@@ -360,7 +358,7 @@ integration tests.
 
 #### Dependency Inference
 
-**Load from `.github/patterns/test-patterns.yml` → `dependency_inference_rules`**
+**Load from `{{COPILOT_HOME}}/patterns/test-patterns.yml` → `dependency_inference_rules`**
 
 Default inference by SUT Type:
 
@@ -551,7 +549,7 @@ When a feature has **fewer than 3 tests** in total, flat comments are acceptable
 
 ### Assertions
 
-**Load assertion library patterns from `.github/patterns/test-patterns.yml` → `assertion_libraries`**
+**Load assertion library patterns from `{{COPILOT_HOME}}/patterns/test-patterns.yml` → `assertion_libraries`**
 
 **Selection rule:** Check pom.xml for `assertj-core` OR `spring-boot-starter-test`
 

@@ -18,8 +18,8 @@ Always use the **code-review** skill before generating your review.
 
 **On first invocation of this agent in a session:**
 
-1. **Read and cache** `.github/config/copilot-config.yml` — store project configuration for session duration
-2. **Read and cache** `.github/patterns/review-patterns.yml` — store finding patterns for session duration
+1. **Read and cache** `{{COPILOT_HOME}}/config/copilot-config.yml` — store project configuration for session duration
+2. **Read and cache** `{{COPILOT_HOME}}/patterns/review-patterns.yml` — store finding patterns for session duration
 3. **Never re-read** these files unless user explicitly requests "reload configuration"
 
 **During code review:**
@@ -44,7 +44,7 @@ code-review
 This skill contains the review rules for SOLID, DRY, KISS, Spring Boot DI anti-patterns, JDK modernization, secrets
 detection, and report generation.
 
-See `.github/skills/code-review/code-review.skill.md` for complete specification.
+See `{{COPILOT_HOME}}/skills/code-review/code-review.skill.md` for complete specification.
 
 Do not perform a review without first applying this skill.
 

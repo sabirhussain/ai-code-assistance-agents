@@ -1,16 +1,16 @@
 # Project Configuration — update this file per project
 project:
   language: Java
-  jdk_version: 17
-  build_tool: Maven   # Maven | Gradle
+  lang_version: {{LANG_VERSION}}  # e.g., 17, 20
+  build_tool: {{BUILD_TOOL}}   # Maven | Gradle
 
 framework:
-  spring_boot_version: 3.5.11
+  spring_boot_version: {{SPRING_BOOT_VERSION}}  # e.g., 3.5.11
 
 package:
-  base: com.hcltech.demo.coding.agent
-  test_path: src/test/java/com/hcltech/demo/coding/agent
-  main_path: src/main/java/com/hcltech/demo/coding/agent
+  base: {{BASE_PACKAGE}}  # e.g., com.hcltech.demo.coding.agent
+  test_path: {{TEST_PATH}}  # e.g., src/test/java/com/hcltech/demo/coding/agent
+  main_path: {{MAIN_PATH}}  # e.g., src/main/java/com/hcltech/demo/coding/agent
 
 testing:
   framework: JUnit 5 + Mockito
@@ -21,8 +21,8 @@ testing:
 
 # Pattern file references for YAML-based code generation
 pattern_files:
-  test_patterns: .github/test-patterns.yml
-  review_patterns: .github/review-patterns.yml
+  test_patterns: {{COPILOT_HOME}}/patterns/test-patterns.yml
+  review_patterns: {{COPILOT_HOME}}/patterns/review-patterns.yml
 
 # Token economy settings to minimize token usage
 token_economy:

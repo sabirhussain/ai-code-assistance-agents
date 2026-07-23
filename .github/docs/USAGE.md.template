@@ -1,0 +1,511 @@
+# GitHub Copilot Custom Agents - Usage Guide
+
+Welcome to your custom GitHub Copilot agents! This guide will help you get the most out of your installation.
+
+## Table of Contents
+
+- [What Are These Agents?](#what-are-these-agents)
+- [Available Agents](#available-agents)
+- [Configuration](#configuration)
+- [Usage Examples](#usage-examples)
+- [Skills Reference](#skills-reference)
+- [Troubleshooting](#troubleshooting)
+- [Updating](#updating)
+- [Uninstalling](#uninstalling)
+
+---
+
+## What Are These Agents?
+
+These custom agents extend GitHub Copilot CLI with specialized capabilities for Java/Spring Boot development:
+
+- **TDD Generator**: Generates failing unit tests following Test-Driven Development principles
+- **Code Review**: Performs intelligent code reviews focused on architecture, security, and testability
+
+All agents are installed system-wide in `~/.copilot/` and are available across all your repositories.
+
+---
+
+## Available Agents
+
+### 🧪 TDD Generator Agent
+
+**Purpose**: Generate comprehensive failing unit tests (RED phase of TDD)
+
+**When to Use**:
+- Starting a new feature using TDD
+- Need test coverage before implementation
+- Want mutation-testing-ready tests
+
+**How to Use**:
+```bash
+gh copilot agent tdd-generator
+```
+
+**What It Does**:
+- Generates JUnit 5 + Mockito tests
+- Uses AAA (Arrange-Act-Assert) pattern
+- Follows naming conventions: `should<Behavior>When<Condition>()`
+- Includes PIT mutation testing configuration
+- **Never** creates implementation code (only tests)
+
+**Example Interaction**:
+```
+You: Generate tests for a UserService that validates email addresses
+     and sends welcome emails after registration
+
+Agent: [Generates UserServiceTest.java with:
+        - shouldValidateEmailFormat()
+        - shouldSendWelcomeEmailWhenUserRegisters()
+        - shouldThrowExceptionWhenEmailIsInvalid()
+        + PIT mutation testing config]
+```
+
+**Key Features**:
+- ✅ Uses your project configuration from `~/.copilot/config/copilot-config.yml`
+- ✅ Automatically infers dependencies (e.g., EmailService for UserService)
+- ✅ Supports nested test classes for logical grouping
+- ✅ Token-optimized (minimal file reads, cached configuration)
+
+---
+
+### 🔍 Code Review Agent
+
+**Purpose**: Review Java and Spring Boot code for quality, security, and testability
+
+**When to Use**:
+- Before committing changes
+- During pull request reviews
+- Checking for Spring Boot anti-patterns
+- Security audit
+
+**How to Use**:
+```bash
+# Review changed files (default)
+gh copilot agent code-review
+
+# Review specific file
+gh copilot agent code-review src/main/java/com/example/UserService.java
+
+# Deep review with dependency analysis
+gh copilot agent code-review "deep review UserService.java"
+```
+
+**Review Modes**:
+
+1. **Targeted Review** (default):
+   - Reviews only explicitly requested files
+   - Reviews only changed files if none specified
+   - Fast, focused feedback
+
+2. **Deep Review** (explicit request):
+   - Analyzes dependencies
+   - Checks architectural impact
+   - Cross-file analysis
+
+**What It Checks**:
+
+Priority | Focus Area | Examples
+---------|-----------|----------
+🔴 P1 | Security | Hardcoded credentials, secrets in logs, weak auth
+🟠 P2 | Architecture | SOLID violations, circular dependencies, DI anti-patterns
+🟡 P3 | Testability | Hidden dependencies, static calls, non-deterministic code
+🟢 P4 | Maintainability | DRY violations, large methods, complexity
+🔵 P5 | Modernization | JDK improvements, Spring Boot best practices
+
+**Example Output**:
+```
+Review Scope
+------------
+Mode: Targeted Review
+Files: src/main/java/com/example/UserService.java
+
+🔴 SECURITY - Priority 1
+  Line 42: Hardcoded database password
+  Recommendation: Use Spring @Value or environment variables
+
+🟠 ARCHITECTURE - Priority 2  
+  Line 15: Field injection detected (@Autowired on field)
+  Recommendation: Use constructor injection for better testability
+
+🟢 MAINTAINABILITY - Priority 4
+  Line 87-145: Method exceeds 50 lines
+  Recommendation: Extract validation logic to separate method
+```
+
+---
+
+## Configuration
+
+### Main Configuration File
+
+Location: `~/.copilot/config/copilot-config.yml`
+
+```yaml
+project:
+  language: Java
+  lang_version: 17           # Your Java version
+  build_tool: Maven          # Maven or Gradle
+
+framework:
+  spring_boot_version: 3.5.11
+
+package:
+  base: com.example.app      # Your base package
+  test_path: src/test/java/com/example/app
+  main_path: src/main/java/com/example/app
+
+testing:
+  framework: JUnit 5 + Mockito
+  mutation_tool: PIT
+  nested_test: true          # Use @Nested for test organization
+  aaa_comments: true         # Add // Arrange, // Act, // Assert comments
+```
+
+### Customizing for Your Projects
+
+**Per-Project Override**:
+You can create a `.github/copilot-config.yml` in any repository to override the system-wide defaults:
+
+```yaml
+project:
+  lang_version: 21           # Use Java 21 for this project
+
+package:
+  base: com.mycompany.myapp  # Project-specific base package
+```
+
+**Token Economy Settings**:
+These settings minimize token usage (already optimized, no changes needed):
+
+```yaml
+token_economy:
+  cache_config: true          # Cache config for session
+  progressive_disclosure: true # Ask only required fields
+  max_context_reads: 3        # Limit exploratory file reads
+  avoid_semantic_search: true # Only search when explicitly requested
+```
+
+---
+
+## Usage Examples
+
+### Example 1: Generate Tests for New Feature
+
+**Scenario**: You're building a payment processing service
+
+```bash
+$ gh copilot agent tdd-generator
+
+You: Generate tests for PaymentService that:
+     - Validates payment amount is positive
+     - Processes credit card payments
+     - Handles payment failures with retry logic
+     - Logs successful transactions
+
+Agent: [Generates PaymentServiceTest.java with:
+        - Test class with mocked dependencies (PaymentGateway, Logger)
+        - @Nested classes for each scenario
+        - Comprehensive assertions
+        - PIT mutation config snippet]
+```
+
+### Example 2: Review Before Commit
+
+**Scenario**: You've modified several files and want a quick review
+
+```bash
+$ git status
+  Modified: src/main/java/com/example/UserService.java
+  Modified: src/main/resources/application.yml
+
+$ gh copilot agent code-review
+
+Agent: [Reviews both files, reports:
+        - Security issue in application.yml (exposed password)
+        - Testability issue in UserService.java (field injection)
+        - Provides specific line numbers and fixes]
+```
+
+### Example 3: Deep Architectural Review
+
+**Scenario**: Major refactoring of authentication module
+
+```bash
+$ gh copilot agent code-review "deep review src/main/java/com/example/auth/"
+
+Agent: [Performs deep analysis:
+        - Reviews all files in auth/ package
+        - Checks dependency relationships
+        - Identifies circular dependencies
+        - Suggests architectural improvements]
+```
+
+### Example 4: Configure Agent for Specific Project
+
+```bash
+# Edit project-specific config
+$ vim .github/copilot-config.yml
+
+# Update base package and Java version
+project:
+  lang_version: 21
+  
+package:
+  base: com.acme.crm
+
+# Now agents use these values for this repository
+$ gh copilot agent tdd-generator
+```
+
+---
+
+## Skills Reference
+
+Agents use specialized "skills" that define their behavior:
+
+### 📝 write-failing-test Skill
+
+**Location**: `~/.copilot/skills/write-failing-test/`
+
+**What It Does**:
+- Defines RED phase TDD rules
+- Test naming conventions
+- Package structure
+- Dependency inference rules
+- Mutation testing integration
+
+**Used By**: TDD Generator Agent
+
+### 🔎 code-review Skill
+
+**Location**: `~/.copilot/skills/code-review/`
+
+**What It Does**:
+- Review priority matrix (Security → Architecture → Testability)
+- SOLID principle checks
+- Spring Boot anti-pattern detection
+- JDK modernization suggestions
+- Report formatting
+
+**Used By**: Code Review Agent
+
+### 📋 Pattern Files
+
+**test-patterns.yml**: Defines test structure templates by component type
+**review-patterns.yml**: Defines finding patterns and detection rules
+
+These are referenced by skills and cached during agent sessions.
+
+---
+
+## Troubleshooting
+
+### Problem: Agent Not Found
+
+**Symptom**:
+```
+Error: Unknown agent: tdd-generator
+```
+
+**Solution**:
+1. Verify installation: `ls ~/.copilot/agents/`
+2. Check file exists: `cat ~/.copilot/agents/tdd-generator.agent.md`
+3. Re-run installer if missing: 
+   ```bash
+   bash <(curl -fsSL https://raw.githubusercontent.com/sabirhussain/ai-code-assistance-agents/main/github-agent-install.sh)
+   ```
+
+### Problem: Configuration Not Applied
+
+**Symptom**: Agent uses wrong Java version or package name
+
+**Solution**:
+1. Check config exists: `cat ~/.copilot/config/copilot-config.yml`
+2. Verify values are correct (no `{{PLACEHOLDERS}}` remaining)
+3. If placeholders exist, re-run installer
+4. For repository-specific config, create `.github/copilot-config.yml`
+
+### Problem: Template Variables Not Replaced
+
+**Symptom**: Files contain `{{COPILOT_HOME}}` or similar placeholders
+
+**Solution**:
+1. This indicates incomplete installation
+2. Re-run installer with `-y` flag:
+   ```bash
+   bash <(curl -fsSL https://raw.githubusercontent.com/sabirhussain/ai-code-assistance-agents/main/github-agent-install.sh) -y
+   ```
+3. Verify processed files: `grep -r "{{" ~/.copilot/`
+
+### Problem: Network Errors During Install
+
+**Symptom**: Installer fails to download files
+
+**Solution**:
+1. Check internet connection
+2. Verify GitHub accessibility: `curl -I https://github.com`
+3. Try again with explicit timeout:
+   ```bash
+   timeout 300 bash <(curl -fsSL https://raw.githubusercontent.com/sabirhussain/ai-code-assistance-agents/main/github-agent-install.sh)
+   ```
+
+### Problem: Review Finds No Files
+
+**Symptom**: Code review agent reports "No eligible files found"
+
+**Solution**:
+1. Code review only works with: `*.java`, `*.yml`, `*.yaml`, `*.properties`
+2. Check git status: `git status`
+3. Explicitly provide file: `gh copilot agent code-review MyService.java`
+
+### Problem: Generated Tests Don't Compile
+
+**Expected Behavior**: TDD Generator creates failing tests intentionally
+
+**Why**: The agent only generates RED phase tests. Implementation doesn't exist yet.
+
+**Next Steps**:
+1. Implement the production code (GREEN phase)
+2. Run tests: `./mvnw test`
+3. Refactor if needed (REFACTOR phase)
+
+---
+
+## Updating
+
+### Check for Updates
+
+Visit the repository:
+```bash
+https://github.com/sabirhussain/ai-code-assistance-agents
+```
+
+### Update Agents
+
+Re-run the installer to update to the latest version:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/sabirhussain/ai-code-assistance-agents/main/github-agent-install.sh)
+```
+
+**What Happens**:
+- ✅ Your existing installation is backed up to `~/.copilot.backup-TIMESTAMP/`
+- ✅ Latest agent definitions are downloaded
+- ✅ Your configuration values are preserved
+
+### Update Only Configuration
+
+Edit directly without reinstalling:
+
+```bash
+vim ~/.copilot/config/copilot-config.yml
+```
+
+Changes take effect immediately for new agent sessions.
+
+---
+
+## Uninstalling
+
+### Safe Uninstall (Recommended)
+
+Removes only files installed by this project, preserves other custom agents/skills:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/sabirhussain/ai-code-assistance-agents/main/uninstall-github-agent.sh)
+```
+
+Or download and run locally:
+```bash
+curl -fsSL https://raw.githubusercontent.com/sabirhussain/ai-code-assistance-agents/main/uninstall-github-agent.sh -o uninstall-github-agent.sh
+chmod +x uninstall-github-agent.sh
+./uninstall-github-agent.sh
+```
+
+**What gets removed**:
+- `tdd-generator` and `code-review` agents
+- Associated skills and configuration files
+- Pattern files and instructions
+- USAGE.md guide
+
+**What's preserved**:
+- Directory structure (`agents/`, `skills/`, etc.)
+- Other custom agents or skills you may have
+- Your custom configurations
+
+### Restore From Backup
+
+If you have a backup from a previous installation:
+
+```bash
+# List available backups
+ls -d ~/.copilot.backup-*
+
+# Restore specific backup
+cp -R ~/.copilot.backup-20260722-143000 ~/.copilot
+```
+
+### Remove Specific Agent
+
+```bash
+# Remove just the TDD generator
+rm ~/.copilot/agents/tdd-generator.agent.md
+
+# Remove just the code review agent
+rm ~/.copilot/agents/code-review.agent.md
+```
+
+---
+
+## Getting Help
+
+### Resources
+
+- **Repository**: https://github.com/sabirhussain/ai-code-assistance-agents
+- **Issues**: https://github.com/sabirhussain/ai-code-assistance-agents/issues
+- **Discussions**: https://github.com/sabirhussain/ai-code-assistance-agents/discussions
+
+### Community
+
+Share your experience, ask questions, and contribute improvements!
+
+---
+
+## Quick Reference Card
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  QUICK REFERENCE                                             │
+├─────────────────────────────────────────────────────────────┤
+│  Install/Update:                                             │
+│    bash <(curl -fsSL https://raw.githubusercontent.com/      │
+│      sabirhussain/ai-code-assistance-agents/main/            │
+│      github-agent-install.sh)                                │
+│                                                              │
+│  Generate Tests:                                             │
+│    gh copilot agent tdd-generator                            │
+│                                                              │
+│  Review Code:                                                │
+│    gh copilot agent code-review                              │
+│    gh copilot agent code-review MyFile.java                  │
+│    gh copilot agent code-review "deep review MyFile.java"    │
+│                                                              │
+│  Configuration:                                              │
+│    ~/.copilot/config/copilot-config.yml                      │
+│    .github/copilot-config.yml  (repo-specific)               │
+│                                                              │
+│  Files:                                                      │
+│    ~/.copilot/agents/          (agent definitions)           │
+│    ~/.copilot/skills/          (agent skills)                │
+│    ~/.copilot/patterns/        (code patterns)               │
+│    ~/.copilot/USAGE.md         (this guide)                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+**Version**: 1.0.0  
+**Last Updated**: 2026-07-22
+
+Enjoy your enhanced GitHub Copilot experience! 🚀
