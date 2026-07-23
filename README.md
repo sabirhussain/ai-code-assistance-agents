@@ -75,7 +75,7 @@ Performs intelligent code reviews focused on architecture, security, and testabi
 
 Select your custom agents from the Agent dropdown in GitHub Copilot CLI:
 
-![How to use custom agents](images/how-to-use-agent.png)
+<img src="images/how-to-use-agent.png" alt="How to use custom agents" width="600px"/>
 
 ### Generate Tests for a New Feature
 
