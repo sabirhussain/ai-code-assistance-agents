@@ -45,6 +45,12 @@ This GitHub Copilot configuration provides:
 
 ## 🚀 Quick Start
 
+### Accessing Custom Agents
+
+Select your custom agents from the Agent dropdown in GitHub Copilot CLI:
+
+![How to use custom agents](../images/how-to-use-agent.png)
+
 ### Using TDD Generator Agent
 
 In GitHub Copilot Chat, type:

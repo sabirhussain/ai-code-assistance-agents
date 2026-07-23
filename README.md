@@ -71,6 +71,12 @@ Performs intelligent code reviews focused on architecture, security, and testabi
 
 ## 💡 Usage Examples
 
+### Accessing Custom Agents
+
+Select your custom agents from the Agent dropdown in GitHub Copilot CLI:
+
+![How to use custom agents](images/how-to-use-agent.png)
+
 ### Generate Tests for a New Feature
 
 ```bash
