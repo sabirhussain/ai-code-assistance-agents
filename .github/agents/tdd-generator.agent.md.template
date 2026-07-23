@@ -14,8 +14,8 @@ You are a world-class software engineer specializing in Test-Driven Development 
 
 **On first invocation of this agent in a session:**
 
-1. **Read and cache** `.github/config/copilot-config.yml` — store all values for session duration
-2. **Read and cache** `.github/patterns/test-patterns.yml` — store pattern definitions for session duration
+1. **Read and cache** `{{COPILOT_HOME}}/config/copilot-config.yml` — store all values for session duration
+2. **Read and cache** `{{COPILOT_HOME}}/patterns/test-patterns.yml` — store pattern definitions for session duration
 3. **Never re-read** these files unless user explicitly requests "reload configuration"
 
 **During test generation:**
@@ -41,7 +41,7 @@ write-failing-test
 This skill contains the rules for RED phase, JUnit 5 + Mockito conventions, test naming, package structure, and mutation
 testing config.
 
-See `.github/skills/write-failing-test/write-failing-test.skill.md` for complete specification.
+See `{{COPILOT_HOME}}/skills/write-failing-test/write-failing-test.skill.md` for complete specification.
 
 Do not generate tests without first applying this skill.
 
@@ -56,7 +56,7 @@ Do not generate tests without first applying this skill.
 
 ## Project Conventions
 
-**Load ALL values from `.github/config/copilot-config.yml` (cached at session start):**
+**Load ALL values from `{{COPILOT_HOME}}/config/copilot-config.yml` (cached at session start):**
 
 - Language, JDK version, build tool
 - Framework versions
@@ -64,7 +64,7 @@ Do not generate tests without first applying this skill.
 - Testing framework, mutation tool, PIT plugin version
 - Nested test preference, AAA comments preference
 
-**Load ALL test patterns from `.github/patterns/test-patterns.yml` (cached at session start):**
+**Load ALL test patterns from `{{COPILOT_HOME}}/patterns/test-patterns.yml` (cached at session start):**
 
 - Test structure by SUT type (controller, service, component, repository)
 - Dependency inference rules
@@ -76,7 +76,7 @@ Never hardcode these values — always use cached configuration.
 ## Input You Accept
 
 - **Feature** (REQUIRED) — User story, requirements, acceptance criteria
-- **Dependencies** (REQUIRED or infer from SUT Type + Feature keywords using `.github/patterns/test-patterns.yml` →
+- **Dependencies** (REQUIRED or infer from SUT Type + Feature keywords using `{{COPILOT_HOME}}/patterns/test-patterns.yml` →
   `dependency_inference_rules`)
 - **SUT Type** (optional) — Infer from Feature keywords if missing (see skill for inference rules)
 - **Class** (optional) — If provided, skip SUT Type and Class questions

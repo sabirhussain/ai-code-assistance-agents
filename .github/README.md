@@ -7,20 +7,31 @@ generation.
 
 ```
 .github/
-├── copilot-config.yml                  # Project configuration
-├── copilot-instructions.md             # Coding instructions for GitHub Copilot
-├── test-patterns.yml                   # Test generation patterns (shared)
-├── review-patterns.yml                 # Code review patterns (shared)
-├── TOKEN_OPTIMIZATION_SUMMARY.md       # Implementation documentation
 ├── README.md                           # This file
+├── token_optimization_summary.md       # Implementation documentation
 ├── agents/
 │   ├── code-review.agent.md            # Code review agent
-│   └── tdd-generator.agent.md          # TDD test generator agent
+│   ├── code-review.agent.md.template   # Code review agent template (for installer)
+│   ├── tdd-generator.agent.md          # TDD test generator agent
+│   └── tdd-generator.agent.md.template # TDD generator template (for installer)
+├── config/
+│   ├── copilot-config.yml              # Project configuration
+│   └── copilot-config.template.yml     # Config template (for installer)
+├── docs/
+│   └── USAGE.md.template               # Usage guide template (for installer)
+├── instructions/
+│   ├── copilot-instructions.md         # Coding instructions for GitHub Copilot
+│   └── copilot-instructions.md.template # Instructions template (for installer)
+├── patterns/
+│   ├── test-patterns.yml               # Test generation patterns (shared)
+│   └── review-patterns.yml             # Code review patterns (shared)
 └── skills/
     ├── code-review/
-    │   └── code-review.skill.md        # Code review skill
+    │   ├── code-review.skill.md        # Code review skill
+    │   └── code-review.skill.md.template # Skill template (for installer)
     └── write-failing-test/
-        └── write-failing-test.skill.md  # Test generation skill
+        ├── write-failing-test.skill.md  # Test generation skill
+        └── write-failing-test.skill.md.template # Skill template (for installer)
 ```
 
 ## 🎯 Purpose
@@ -44,8 +55,8 @@ In GitHub Copilot Chat, type:
 
 The agent will:
 
-- Read cached configuration from `.github/copilot-config.yml`
-- Load test patterns from `.github/test-patterns.yml`
+- Read cached configuration from `.github/config/copilot-config.yml`
+- Load test patterns from `.github/patterns/test-patterns.yml`
 - Generate failing unit tests following TDD best practices
 - Provide mutation testing configuration
 
@@ -59,8 +70,8 @@ In GitHub Copilot Chat, type:
 
 The agent will:
 
-- Read cached configuration from `.github/copilot-config.yml`
-- Load review patterns from `.github/review-patterns.yml`
+- Read cached configuration from `.github/config/copilot-config.yml`
+- Load review patterns from `.github/patterns/review-patterns.yml`
 - Analyze modified files from git status
 - Generate comprehensive review report
 
@@ -137,15 +148,15 @@ Pattern files are tool-agnostic and shared between GitHub Copilot and GitLab Duo
 
 This script copies:
 
-- `.github/test-patterns.yml` → `.gitlab/test-patterns.yml`
-- `.github/review-patterns.yml` → `.gitlab/review-patterns.yml`
+- `.github/patterns/test-patterns.yml` → `.gitlab/patterns/test-patterns.yml`
+- `.github/patterns/review-patterns.yml` → `.gitlab/patterns/review-patterns.yml`
 
 ### When to Sync
 
 Run the sync script after:
 
-- Updating test patterns in `.github/test-patterns.yml`
-- Updating review patterns in `.github/review-patterns.yml`
+- Updating test patterns in `.github/patterns/test-patterns.yml`
+- Updating review patterns in `.github/patterns/review-patterns.yml`
 - Adding new pattern categories
 - Modifying detection rules
 
@@ -153,13 +164,13 @@ Run the sync script after:
 
 The following files need manual updates (not synced automatically):
 
-- `copilot-config.yml` - Project-specific settings
+- `config/copilot-config.yml` - Project-specific settings
 - Agent files - Logic changes (with path updates)
 - Skill files - Logic changes (with path updates)
 
 ## 📝 Configuration
 
-### Project Configuration (`copilot-config.yml`)
+### Project Configuration (`config/copilot-config.yml`)
 
 Key settings:
 
@@ -168,9 +179,10 @@ Key settings:
 - **Base Package:** `com.hcltech.demo.coding.agent`
 - **Testing Framework:** JUnit 5 + Mockito
 - **Mutation Tool:** PIT
-  To update:
 
-1. Edit `.github/copilot-config.yml`
+To update:
+
+1. Edit `.github/config/copilot-config.yml`
 2. Restart GitHub Copilot or reload VS Code window to refresh cache
 
 ### Token Economy Settings
@@ -195,8 +207,8 @@ All agents follow these rules:
 ls -la .github/agents/
 ls -la .github/skills/*/
 # Verify pattern files are identical
-diff .github/test-patterns.yml .gitlab/test-patterns.yml
-diff .github/review-patterns.yml .gitlab/review-patterns.yml
+diff .github/patterns/test-patterns.yml .gitlab/patterns/test-patterns.yml
+diff .github/patterns/review-patterns.yml .gitlab/patterns/review-patterns.yml
 # Count total lines
 wc -l .github/**/*.{yml,md}
 ```
@@ -218,15 +230,15 @@ Feature: Create and retrieve users from database
 
 ## 📚 Documentation
 
-- **TOKEN_OPTIMIZATION_SUMMARY.md** - Complete implementation details
-- **copilot-instructions.md** - Coding standards and TDD rules
-- **copilot-config.yml** - Project configuration reference
+- **token_optimization_summary.md** - Complete implementation details
+- **instructions/copilot-instructions.md** - Coding standards and TDD rules
+- **config/copilot-config.yml** - Project configuration reference
 
 ## 🔧 Maintenance
 
 ### Adding New Patterns
 
-1. Add pattern to `.github/test-patterns.yml` or `.github/review-patterns.yml`
+1. Add pattern to `.github/patterns/test-patterns.yml` or `.github/patterns/review-patterns.yml`
 2. Run sync script: `./.gitlab/sync-patterns.sh`
 3. Test with both GitHub Copilot and GitLab Duo
 
@@ -255,8 +267,8 @@ Feature: Create and retrieve users from database
 ### Differences
 
 - Directory: `.github/` vs `.gitlab/`
-- Config file: `copilot-config.yml` vs `duo-config.yml`
-- Instructions: `copilot-instructions.md` vs `duo-instructions.md`
+- Config file: `config/copilot-config.yml` vs `config/duo-config.yml`
+- Instructions: `instructions/copilot-instructions.md` vs `instructions/duo-instructions.md`
 - Invocation: `@workspace` vs manual discovery in browser
 - All path references updated
 
@@ -276,7 +288,7 @@ Feature: Create and retrieve users from database
 # Re-sync patterns
 ./.gitlab/sync-patterns.sh
 # Verify sync
-diff .github/test-patterns.yml .gitlab/test-patterns.yml
+diff .github/patterns/test-patterns.yml .gitlab/patterns/test-patterns.yml
 ```
 
 ### Agent Not Found
@@ -294,28 +306,29 @@ cat .github/agents/tdd-generator.agent.md | head -3
 
 ```bash
 # Verify config file
-cat .github/copilot-config.yml
+cat .github/config/copilot-config.yml
 # Reload VS Code window
 # (Configuration is cached per session)
 ```
 
 ## 📖 Additional Resources
 
-- [Token Optimization Summary](./TOKEN_OPTIMIZATION_SUMMARY.md)
-- [Test Patterns Reference](./test-patterns.yml)
-- [Review Patterns Reference](./review-patterns.yml)
-- [Copilot Instructions](./copilot-instructions.md)
+- [Token Optimization Summary](./token_optimization_summary.md)
+- [Test Patterns Reference](./patterns/test-patterns.yml)
+- [Review Patterns Reference](./patterns/review-patterns.yml)
+- [Copilot Instructions](./instructions/copilot-instructions.md)
+- [Copilot Configuration](./config/copilot-config.yml)
 - [GitLab Duo Configuration](../.gitlab/README.md) - Parallel setup for GitLab Duo
 
 ## ✅ Checklist
 
 After installation, verify:
 
-- [ ] Directory structure created
-- [ ] All 8 files present
+- [ ] Directory structure created (agents/, config/, docs/, instructions/, patterns/, skills/)
+- [ ] All agent, skill, and template files present
 - [ ] Pattern files synced and identical
 - [ ] Sync script executable (`chmod +x .gitlab/sync-patterns.sh`)
-- [ ] copilot-config.yml has correct project values
+- [ ] config/copilot-config.yml has correct project values
 - [ ] TDD generator agent works with `@workspace`
 - [ ] Code review agent works with `@workspace`
 - [ ] Token economy rules active
