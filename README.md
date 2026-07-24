@@ -150,7 +150,23 @@ Prompts for configuration values with sensible defaults.
 bash <(curl -fsSL https://raw.githubusercontent.com/sabirhussain/ai-code-assistance-agents/main/github-agent-install.sh) -y
 ```
 
-Uses all defaults, perfect for CI/CD or automated setups.
+Uses all defaults for quick personal setup.
+
+### Enterprise/Team Setup (Recommended for CI/CD)
+
+For company-wide or team deployments:
+
+1. **Fork this repository** to your organization
+2. **Customize templates** in `.github/` directory:
+   - Update `copilot-config.template.yml` with your company defaults
+   - Modify `copilot-instructions.md.template` for your coding standards
+   - Adjust pattern files for your tech stack
+3. **Deploy to team**:
+   ```bash
+   bash <(curl -fsSL https://raw.githubusercontent.com/YOUR_ORG/ai-code-assistance-agents/main/github-agent-install.sh) -y
+   ```
+
+This ensures consistent configuration across your organization.
 
 ### Local Testing Mode (for developers)
 
