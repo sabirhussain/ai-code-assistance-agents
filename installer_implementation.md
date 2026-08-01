@@ -100,7 +100,7 @@ User runs curl command
 ~/.copilot/
 ├── agents/
 │   ├── tdd-generator.agent.md
-│   └── code-review.agent.md
+│   └── spring-boot-peer-review.agent.md
 ├── skills/
 │   ├── write-failing-test/
 │   │   └── write-failing-test.skill.md
@@ -232,7 +232,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/sabirhussain/ai-code-assista
    
    # Test agents
    gh copilot agent tdd-generator
-   gh copilot agent code-review
+   gh copilot agent spring-boot-peer-review
    ```
 
 3. **Create Release**:

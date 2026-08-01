@@ -166,7 +166,7 @@ echo "Running installer in local mode..."
 # 3. Verify installation
 echo "Verifying installation..."
 test -f ~/.copilot/agents/tdd-generator.agent.md
-test -f ~/.copilot/agents/code-review.agent.md
+test -f ~/.copilot/agents/spring-boot-peer-review.agent.md
 test -f ~/.copilot/config/copilot-config.yml
 test -f ~/.copilot/USAGE.md
 

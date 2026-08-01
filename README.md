@@ -39,7 +39,7 @@ testing configuration.
 
 Performs intelligent code reviews focused on architecture, security, and testability for Java/Spring Boot code.
 
-**Usage**: `gh copilot agent code-review`
+**Usage**: `gh copilot agent spring-boot-peer-review`
 
 **Review Priorities**:
 
@@ -55,7 +55,7 @@ Performs intelligent code reviews focused on architecture, security, and testabi
 ~/.copilot/
 ├── agents/
 │   ├── tdd-generator.agent.md
-│   └── code-review.agent.md
+│   └── spring-boot-peer-review.agent.md
 ├── skills/
 │   ├── write-failing-test/
 │   └── code-review/
@@ -94,7 +94,7 @@ Agent: [Generates PaymentServiceTest.java with comprehensive test cases]
 $ git status
   Modified: src/main/java/com/example/UserService.java
 
-$ gh copilot agent code-review
+$ gh copilot agent spring-boot-peer-review
 
 Agent: [Reviews file and reports security, architecture, and testability issues]
 ```
@@ -102,7 +102,7 @@ Agent: [Reviews file and reports security, architecture, and testability issues]
 ### Deep Architectural Review
 
 ```bash
-$ gh copilot agent code-review "deep review src/main/java/com/example/auth/"
+$ gh copilot agent spring-boot-peer-review "deep review src/main/java/com/example/auth/"
 
 Agent: [Performs cross-file analysis with dependency checking]
 ```
@@ -158,9 +158,9 @@ For company-wide or team deployments:
 
 1. **Fork this repository** to your organization
 2. **Customize templates** in `.github/` directory:
-   - Update `copilot-config.template.yml` with your company defaults
-   - Modify `copilot-instructions.md.template` for your coding standards
-   - Adjust pattern files for your tech stack
+    - Update `copilot-config.template.yml` with your company defaults
+    - Modify `copilot-instructions.md.template` for your coding standards
+    - Adjust pattern files for your tech stack
 3. **Deploy to team**:
    ```bash
    bash <(curl -fsSL https://raw.githubusercontent.com/YOUR_ORG/ai-code-assistance-agents/main/github-agent-install.sh) -y
@@ -237,7 +237,7 @@ chmod +x uninstall-github-agent.sh
 
 **What gets removed**:
 
-- `tdd-generator` and `code-review` agents
+- `tdd-generator` and `spring-boot-peer-review` agents
 - Associated skills and configuration files
 - Pattern files and instructions
 - USAGE.md guide

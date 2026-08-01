@@ -12,13 +12,12 @@ description: >
 **Critical: Follow these rules to minimize token usage:**
 
 1. **CACHE CONFIG** — Read `.github/config/copilot-config.yml` and `.github/patterns/test-patterns.yml` ONCE at session
-   start, cache
-   values, never re-read
+   start, cache values, never re-read
 2. **NEVER scan entire repository** — Only read files explicitly requested by user or required for pattern matching
 3. **NEVER use semantic_search** — Unless user explicitly requests "find" or "search across codebase"
 4. **NEVER read dependency chains** — Only read files directly in scope (the class under test)
-5. **PROGRESSIVE DISCLOSURE** — Ask ONLY required fields (Feature, Dependencies); ask optional fields ONLY if user
-   types 'configure' or 'options'
+5. **PROGRESSIVE DISCLOSURE** — Ask ONLY required fields (Feature, Dependencies); ask optional fields ONLY if user types
+   'configure' or 'options'
 6. **STOP after sufficient context** — Maximum 3 file reads unless user requests more research
 7. **USE YAML PATTERNS** — Load patterns from `.github/patterns/test-patterns.yml` instead of interpreting prose
    examples
@@ -328,7 +327,7 @@ Unit-test generation differs by SUT Type (System Under Test). Patterns are defin
 
 - Field typed as interface, instantiated with impl + mocked constructor deps
 - Mock repository dependencies
-- Verify method calls with ArgumentCaptor and verify()
+- Verify method calls with ArgumentCaptor and verify ()
 - Test business rules, validations, exception handling
 
 **Validation:** Must contain @Mock, AAA comments, assertThat. Must NOT contain @InjectMocks, @SpringBootTest,
@@ -459,8 +458,8 @@ UserServiceDeleteUserTest.java    ← extracted when DeleteUserTests ≥ 8 metho
 
 ### Coverage
 
-Every generated test file **MUST** include at least one test from **each** of the three categories below.
-**Omitting any category is a generation error.**
+Every generated test file **MUST** include at least one test from **each** of the three categories below. **Omitting any
+category is a generation error.**
 
 #### ✅ Success (Happy Path)
 

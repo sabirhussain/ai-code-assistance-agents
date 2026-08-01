@@ -82,13 +82,13 @@ Agent: [Generates UserServiceTest.java with:
 **How to Use**:
 ```bash
 # Review changed files (default)
-gh copilot agent code-review
+gh copilot agent spring-boot-peer-review
 
 # Review specific file
-gh copilot agent code-review src/main/java/com/example/UserService.java
+gh copilot agent spring-boot-peer-review src/main/java/com/example/UserService.java
 
 # Deep review with dependency analysis
-gh copilot agent code-review "deep review UserService.java"
+gh copilot agent spring-boot-peer-review "deep review UserService.java"
 ```
 
 **Review Modes**:
@@ -219,7 +219,7 @@ $ git status
   Modified: src/main/java/com/example/UserService.java
   Modified: src/main/resources/application.yml
 
-$ gh copilot agent code-review
+$ gh copilot agent spring-boot-peer-review
 
 Agent: [Reviews both files, reports:
         - Security issue in application.yml (exposed password)
@@ -232,7 +232,7 @@ Agent: [Reviews both files, reports:
 **Scenario**: Major refactoring of authentication module
 
 ```bash
-$ gh copilot agent code-review "deep review src/main/java/com/example/auth/"
+$ gh copilot agent spring-boot-peer-review "deep review src/main/java/com/example/auth/"
 
 Agent: [Performs deep analysis:
         - Reviews all files in auth/ package
@@ -357,7 +357,7 @@ Error: Unknown agent: tdd-generator
 **Solution**:
 1. Code review only works with: `*.java`, `*.yml`, `*.yaml`, `*.properties`
 2. Check git status: `git status`
-3. Explicitly provide file: `gh copilot agent code-review MyService.java`
+3. Explicitly provide file: `gh copilot agent spring-boot-peer-review MyService.java`
 
 ### Problem: Generated Tests Don't Compile
 
@@ -424,7 +424,7 @@ chmod +x uninstall-github-agent.sh
 ```
 
 **What gets removed**:
-- `tdd-generator` and `code-review` agents
+- `tdd-generator` and `spring-boot-peer-review` agents
 - Associated skills and configuration files
 - Pattern files and instructions
 - USAGE.md guide
@@ -452,8 +452,8 @@ cp -R ~/.copilot.backup-20260722-143000 ~/.copilot
 # Remove just the TDD generator
 rm ~/.copilot/agents/tdd-generator.agent.md
 
-# Remove just the code review agent
-rm ~/.copilot/agents/code-review.agent.md
+# Remove just the peer review agent
+rm ~/.copilot/agents/spring-boot-peer-review.agent.md
 ```
 
 ---
@@ -475,32 +475,32 @@ Share your experience, ask questions, and contribute improvements!
 ## Quick Reference Card
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  QUICK REFERENCE                                             │
-├─────────────────────────────────────────────────────────────┤
-│  Install/Update:                                             │
-│    bash <(curl -fsSL https://raw.githubusercontent.com/      │
-│      sabirhussain/ai-code-assistance-agents/main/            │
-│      github-agent-install.sh)                                │
-│                                                              │
-│  Generate Tests:                                             │
-│    gh copilot agent tdd-generator                            │
-│                                                              │
-│  Review Code:                                                │
-│    gh copilot agent code-review                              │
-│    gh copilot agent code-review MyFile.java                  │
-│    gh copilot agent code-review "deep review MyFile.java"    │
-│                                                              │
-│  Configuration:                                              │
-│    ~/.copilot/config/copilot-config.yml                      │
-│    .github/copilot-config.yml  (repo-specific)               │
-│                                                              │
-│  Files:                                                      │
-│    ~/.copilot/agents/          (agent definitions)           │
-│    ~/.copilot/skills/          (agent skills)                │
-│    ~/.copilot/patterns/        (code patterns)               │
-│    ~/.copilot/USAGE.md         (this guide)                  │
-└─────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│  QUICK REFERENCE                                                       │
+├────────────────────────────────────────────────────────────────────────┤
+│  Install/Update:                                                       │
+│    bash <(curl -fsSL https://raw.githubusercontent.com/                │
+│      sabirhussain/ai-code-assistance-agents/main/                      │
+│      github-agent-install.sh)                                          │
+│                                                                        │
+│  Generate Tests:                                                       │
+│    gh copilot agent tdd-generator                                      │
+│                                                                        │
+│  Review Code:                                                          │
+│    gh copilot agent spring-boot-peer-review                            │
+│    gh copilot agent spring-boot-peer-review MyFile.java                │
+│    gh copilot agent spring-boot-peer-review "deep review MyFile.java"  │
+│                                                                        │
+│  Configuration:                                                        │
+│    ~/.copilot/config/copilot-config.yml                                │
+│    .github/copilot-config.yml  (repo-specific)                         │
+│                                                                        │
+│  Files:                                                                │
+│    ~/.copilot/agents/          (agent definitions)                     │
+│    ~/.copilot/skills/          (agent skills)                          │
+│    ~/.copilot/patterns/        (code patterns)                         │
+│    ~/.copilot/USAGE.md         (this guide)                            │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---

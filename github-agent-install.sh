@@ -90,7 +90,7 @@ OPTIONS:
     -h, --help         Show this help message
 
 WHAT GETS INSTALLED:
-    - Custom agents (TDD Generator, Code Review)
+    - Custom agents (TDD Generator, SpringBoot Peer Review)
     - Skills (write-failing-test, code-review)
     - Configuration templates
     - Pattern files
@@ -288,7 +288,7 @@ install_agents() {
     
     mkdir -p "${INSTALL_DIR}/agents"
     
-    local agents=("tdd-generator" "code-review")
+    local agents=("tdd-generator" "spring-boot-peer-review")
     
     for agent in "${agents[@]}"; do
         local source=".github/agents/${agent}.agent.md.template"
@@ -398,7 +398,7 @@ verify_installation() {
     local errors=0
     local expected_files=(
         "agents/tdd-generator.agent.md"
-        "agents/code-review.agent.md"
+        "agents/spring-boot-peer-review.agent.md"
         "skills/write-failing-test/write-failing-test.skill.md"
         "skills/code-review/code-review.skill.md"
         "config/copilot-config.yml"
@@ -445,8 +445,8 @@ display_summary() {
     fi
     
     echo "🤖 Installed Agents:"
-    echo "   • tdd-generator     - TDD unit test generator"
-    echo "   • code-review       - Java/Spring Boot code reviewer"
+    echo "   • tdd-generator            - TDD unit test generator"
+    echo "   • spring-boot-peer-review  - Java/Spring Boot peer reviewer"
     echo ""
     
     echo "🎯 Configuration:"
@@ -478,7 +478,7 @@ display_summary() {
     echo "   $ gh copilot agent tdd-generator"
     echo ""
     echo "   # Review code changes"
-    echo "   $ gh copilot agent code-review"
+    echo "   $ gh copilot agent spring-boot-peer-review"
     echo ""
     
     log_success "Installation completed successfully!"

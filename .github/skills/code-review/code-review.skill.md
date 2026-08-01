@@ -10,8 +10,7 @@ description: Reviews Java and Spring Boot code for SOLID, DRY, KISS violations, 
 **Critical: Follow these rules to minimize token usage:**
 
 1. **CACHE CONFIG** — Read `.github/config/copilot-config.yml` and `.github/patterns/review-patterns.yml` ONCE at
-   session start, cache
-   values, never re-read
+   session start, cache values, never re-read
 2. **NEVER scan entire repository** — Only review files explicitly provided by user or in git status
 3. **NEVER use semantic_search** — Unless user explicitly requests "deep review" or "find all instances"
 4. **NEVER read dependency chains** — Only read files directly in review scope (no imports, no related classes)
@@ -153,9 +152,8 @@ Please provide at least one file of a supported type to begin the review, for ex
   "Review src/main/resources/application.yml"
 ```
 
-Do not attempt to infer which files the user may want reviewed.
-Do not fall back to reviewing any other file types.
-Do not generate an empty or partial review report.
+Do not attempt to infer which files the user may want reviewed. Do not fall back to reviewing any other file types. Do
+not generate an empty or partial review report.
 
 ---
 
@@ -223,7 +221,7 @@ Mandatory assessment for every Java file:
 Suggest improvements compatible with detected JDK version:
 
 - **JDK 8+**: Optional, Streams, Method References, Try-with-Resources
-- **JDK 11+**: String.isBlank(), Files.readString()
+- **JDK 11+**: String.isBlank (), Files.readString ()
 - **JDK 17+**: Switch expressions, Text blocks, Pattern matching, Records, Sealed classes
 - **JDK 21+**: Pattern matching enhancements, Sequenced collections
 
