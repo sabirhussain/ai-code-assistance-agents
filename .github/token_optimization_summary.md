@@ -134,7 +134,7 @@ session_cache:
 **After:** ~75 lines  
 **Reduction:** 37%
 
-### 8. `.github/agents/code-review.agent.md`
+### 8. `.github/agents/spring-boot-peer-review.agent.md`
 
 **Changes:**
 
@@ -153,29 +153,29 @@ session_cache:
 
 ### Current System (Before Optimization)
 
-| Component                   | Lines     | Est. Tokens |
-|-----------------------------|-----------|-------------|
-| copilot-instructions.md     | 54        | 1,350       |
-| copilot-config.yml          | 20        | 500         |
-| write-failing-test.skill.md | 922       | 23,050      |
-| code-review.skill.md        | 770       | 19,250      |
-| tdd-generator.agent.md      | 119       | 2,975       |
-| code-review.agent.md        | 529       | 13,225      |
-| **Total**                   | **2,414** | **~60,350** |
+| Component                        | Lines     | Est. Tokens |
+|----------------------------------|-----------|-------------|
+| copilot-instructions.md          | 54        | 1,350       |
+| copilot-config.yml               | 20        | 500         |
+| write-failing-test.skill.md      | 922       | 23,050      |
+| code-review.skill.md             | 770       | 19,250      |
+| tdd-generator.agent.md           | 119       | 2,975       |
+| spring-boot-peer-review.agent.md | 529       | 13,225      |
+| **Total**                        | **2,414** | **~60,350** |
 
 ### Optimized System (After Implementation)
 
-| Component                   | Lines     | Est. Tokens |
-|-----------------------------|-----------|-------------|
-| copilot-instructions.md     | 62        | 1,550       |
-| copilot-config.yml          | 38        | 950         |
-| test-patterns.yml           | 329       | 8,225       |
-| review-patterns.yml         | 428       | 10,700      |
-| write-failing-test.skill.md | 480       | 12,000      |
-| code-review.skill.md        | 320       | 8,000       |
-| tdd-generator.agent.md      | 75        | 1,875       |
-| code-review.agent.md        | 480       | 12,000      |
-| **Total**                   | **2,212** | **~55,300** |
+| Component                        | Lines     | Est. Tokens |
+|----------------------------------|-----------|-------------|
+| copilot-instructions.md          | 62        | 1,550       |
+| copilot-config.yml               | 38        | 950         |
+| test-patterns.yml                | 329       | 8,225       |
+| review-patterns.yml              | 428       | 10,700      |
+| write-failing-test.skill.md      | 480       | 12,000      |
+| code-review.skill.md             | 320       | 8,000       |
+| tdd-generator.agent.md           | 75        | 1,875       |
+| spring-boot-peer-review.agent.md | 480       | 12,000      |
+| **Total**                        | **2,212** | **~55,300** |
 
 **But more importantly:**
 
@@ -231,8 +231,8 @@ validation:
 
 ### Pattern Determinism
 
-**Before:** Agent interprets prose → different output each time
-**After:** Agent loads YAML pattern → deterministic field_pattern → consistent output
+**Before:** Agent interprets prose → different output each time **After:** Agent loads YAML pattern → deterministic
+field_pattern → consistent output
 
 **Example:**
 

@@ -1,5 +1,5 @@
 ---
-name: Java Spring Boot Code Reviewer
+name: spring-boot-peer-review
 description: Reviews Java and Spring Boot code using the code-review skill. Focuses on developer-selected files or changed files only, unless a deep review is explicitly requested.
 tools: Bash
 ---
@@ -513,8 +513,8 @@ Please provide at least one specific file to review, for example:
   "Review src/main/resources/application.yml"
 ```
 
-Do not attempt to infer or guess which files the user may want reviewed.
-Do not fall back to reviewing any other file types.
+Do not attempt to infer or guess which files the user may want reviewed. Do not fall back to reviewing any other file
+types.
 
 ---
 

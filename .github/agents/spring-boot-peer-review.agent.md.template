@@ -1,5 +1,5 @@
 ---
-name: Java Spring Boot Code Reviewer
+name: spring-boot-peer-review
 description: Reviews Java and Spring Boot code using the code-review skill. Focuses on developer-selected files or changed files only, unless a deep review is explicitly requested.
 tools: Bash
 ---

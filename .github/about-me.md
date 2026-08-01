@@ -7,31 +7,31 @@ generation.
 
 ```
 .github/
-├── README.md                           # This file
-├── token_optimization_summary.md       # Implementation documentation
+├── README.md                                      # This file
+├── token_optimization_summary.md                  # Implementation documentation
 ├── agents/
-│   ├── code-review.agent.md            # Code review agent
-│   ├── code-review.agent.md.template   # Code review agent template (for installer)
-│   ├── tdd-generator.agent.md          # TDD test generator agent
-│   └── tdd-generator.agent.md.template # TDD generator template (for installer)
+│   ├── spring-boot-peer-review.agent.md           # Code review agent
+│   ├── spring-boot-peer-review.agent.md.template  # Code review agent template (for installer)
+│   ├── tdd-generator.agent.md                     # TDD test generator agent
+│   └── tdd-generator.agent.md.template            # TDD generator template (for installer)
 ├── config/
-│   ├── copilot-config.yml              # Project configuration
-│   └── copilot-config.template.yml     # Config template (for installer)
+│   ├── copilot-config.yml                         # Project configuration
+│   └── copilot-config.template.yml                # Config template (for installer)
 ├── docs/
-│   └── USAGE.md.template               # Usage guide template (for installer)
+│   └── USAGE.md.template                          # Usage guide template (for installer)
 ├── instructions/
-│   ├── copilot-instructions.md         # Coding instructions for GitHub Copilot
-│   └── copilot-instructions.md.template # Instructions template (for installer)
+│   ├── copilot-instructions.md                    # Coding instructions for GitHub Copilot
+│   └── copilot-instructions.md.template           # Instructions template (for installer)
 ├── patterns/
-│   ├── test-patterns.yml               # Test generation patterns (shared)
-│   └── review-patterns.yml             # Code review patterns (shared)
+│   ├── test-patterns.yml                          # Test generation patterns (shared)
+│   └── review-patterns.yml                        # Code review patterns (shared)
 └── skills/
     ├── code-review/
-    │   ├── code-review.skill.md        # Code review skill
-    │   └── code-review.skill.md.template # Skill template (for installer)
+    │   ├── code-review.skill.md                   # Code review skill
+    │   └── code-review.skill.md.template          # Skill template (for installer)
     └── write-failing-test/
-        ├── write-failing-test.skill.md  # Test generation skill
-        └── write-failing-test.skill.md.template # Skill template (for installer)
+        ├── write-failing-test.skill.md            # Test generation skill
+        └── write-failing-test.skill.md.template   # Skill template (for installer)
 ```
 
 ## 🎯 Purpose
@@ -71,7 +71,7 @@ The agent will:
 In GitHub Copilot Chat, type:
 
 ```
-@workspace Use the code-review agent to review my changes
+@workspace Use the spring-boot-peer-review agent to review my changes
 ```
 
 The agent will:

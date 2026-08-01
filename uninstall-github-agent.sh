@@ -28,7 +28,7 @@ fi
 # Ask for confirmation
 echo -e "${YELLOW}[WARNING]${NC} This will remove the following:"
 echo "  - ${INSTALL_DIR}/agents/tdd-generator.agent.md"
-echo "  - ${INSTALL_DIR}/agents/code-review.agent.md"
+echo "  - ${INSTALL_DIR}/agents/spring-boot-peer-review.agent.md"
 echo "  - ${INSTALL_DIR}/skills/write-failing-test/write-failing-test.skill.md"
 echo "  - ${INSTALL_DIR}/skills/code-review/code-review.skill.md"
 echo "  - ${INSTALL_DIR}/config/copilot-config.yml"
@@ -52,7 +52,7 @@ echo -e "${BLUE}[INFO]${NC} Removing installed files..."
 
 # Remove individual files
 rm -f "${INSTALL_DIR}/agents/tdd-generator.agent.md"
-rm -f "${INSTALL_DIR}/agents/code-review.agent.md"
+rm -f "${INSTALL_DIR}/agents/spring-boot-peer-review.agent.md"
 rm -f "${INSTALL_DIR}/skills/write-failing-test/write-failing-test.skill.md"
 rm -f "${INSTALL_DIR}/skills/code-review/code-review.skill.md"
 rm -f "${INSTALL_DIR}/config/copilot-config.yml"
