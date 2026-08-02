@@ -197,6 +197,63 @@ anti_patterns:
       recommendation_template: |
         Refactor into smaller, focused components or use facade pattern.
 
+    over_abstraction:
+      severity: "MEDIUM"
+      detection_keywords:
+        - "interface with single implementation"
+        - "no substitution or extension planned"
+        - "interface created only to enable mocking"
+      explanation_template: |
+        {InterfaceName} has exactly one implementation ({ImplementationName}) with no substitution,
+        extension, or polymorphism value. Interface appears to exist solely to enable mocking.
+        This adds indirection and maintenance overhead without design benefit.
+      recommendation_template: |
+        Remove the interface and inject the concrete class directly.
+        Mockito can mock concrete classes without an interface.
+        Introduce an interface only when a second implementation exists or is genuinely planned.
+      balance_note: |
+        Strive for both testability and maintainability. Over-abstraction for mocking in trivial
+        cases (single implementation, no complexity, Mockito can mock the concrete class directly)
+        reduces readability without benefit — flag as MEDIUM.
+
+        However, when a genuine trade-off is unavoidable in a complex situation — multiple
+        collaborators, external system dependencies, non-deterministic behaviour, or cross-cutting
+        concerns that make the concrete class difficult to isolate — prefer testability over
+        maintainability. Do not raise this finding when the abstraction genuinely serves
+        testability in a complex scenario.
+
+    wrong_test_type:
+      severity: "MEDIUM"
+      detection_keywords:
+        - "@SpringBootTest in unit test"
+        - "full application context for controller test"
+        - "full context load for repository test"
+      explanation_template: |
+        Full Spring context loaded via @SpringBootTest for a test that targets only {layer}.
+        This significantly slows test execution and increases coupling to unrelated beans.
+      recommendation_template: |
+        Use the appropriate Spring Boot test slice:
+        - @WebMvcTest — controller layer (loads only MVC infrastructure)
+        - @DataJpaTest — repository layer (loads only JPA infrastructure, in-memory DB)
+        - @SpringBootTest — full integration tests only, when multiple layers must interact
+        - No annotation (plain JUnit + Mockito) — pure unit tests for service/domain logic
+      applies_to: "all Spring Boot versions"
+
+    mutation_hostile:
+      severity: "LOW"
+      detection_keywords:
+        - "boolean return with no conditional paths"
+        - "trivial method with single return"
+        - "method with unreachable else branch"
+      explanation_template: |
+        {MethodName} is hostile to mutation testing — {reason}.
+        Mutation testing tools (e.g. PIT) will generate surviving mutants that no test detects,
+        giving false confidence in coverage metrics.
+      recommendation_template: |
+        Ensure every branch has a meaningful difference in observable output.
+        Add assertions in tests that verify both the positive and negative cases.
+        Avoid boolean flag methods with no return-value differentiation between paths.
+
 security_patterns:
   secrets:
     password:
@@ -243,6 +300,312 @@ security_patterns:
         - "e.printStackTrace()"
       explanation_template: "printStackTrace() exposes internal details and bypasses logging framework."
       recommendation_template: "Use log.error(\"Message\", exception) instead."
+
+exception_handling:
+  # Version-agnostic patterns — apply to all Spring Boot and Java versions
+  empty_catch_block:
+    severity: "HIGH"
+    applies_to: "all versions"
+    detection_keywords:
+      - "catch block with no body"
+      - "catch with only comment"
+      - "swallowed exception"
+    detection_regex: "catch\\s*\\([^)]+\\)\\s*\\{\\s*\\}"
+    explanation_template: |
+      Empty catch block detected for {ExceptionType} in {ClassName}.{methodName}().
+      The exception is silently swallowed — failures are invisible, making debugging and
+      incident response impossible.
+    recommendation_template: |
+      At minimum, log the exception at error level with context:
+        log.error("Failed to {operation} for {entity}: {}", id, e);
+      If suppression is intentional, add a comment explaining why and log at debug/warn level.
+
+  swallowed_exception:
+    severity: "HIGH"
+    applies_to: "all versions"
+    detection_keywords:
+      - "catch block with no log and no rethrow"
+      - "exception caught but not logged"
+      - "exception caught but not propagated"
+    explanation_template: |
+      Exception {ExceptionType} caught in {ClassName}.{methodName}() but neither logged
+      nor rethrown. Silent failure hides runtime errors from observability tooling.
+    recommendation_template: |
+      Either log and handle:
+        log.error("Unexpected error in {operation}", e);
+      Or rethrow as a domain exception:
+        throw new {DomainException}("Context message", e);
+
+  broad_catch:
+    severity: "MEDIUM"
+    applies_to: "all versions"
+    detection_keywords:
+      - "catch (Exception e)"
+      - "catch (Throwable e)"
+      - "catch (RuntimeException e)"
+    explanation_template: |
+      Overly broad catch of {ExceptionType} in {ClassName}.{methodName}().
+      Catching Exception/Throwable masks the intent and may suppress unrelated errors
+      (e.g., OutOfMemoryError, StackOverflowError when catching Throwable).
+    recommendation_template: |
+      Catch the most specific exception type possible.
+      If broad catch is unavoidable (e.g., top-level handler), document the rationale
+      and ensure the exception is logged before being suppressed or re-wrapped.
+
+  checked_exception_in_spring_component:
+    severity: "MEDIUM"
+    applies_to: "all versions"
+    detection_keywords:
+      - "throws IOException in @Service"
+      - "throws Exception in @Component"
+      - "checked exception signature in Spring bean"
+    explanation_template: |
+      {ClassName} declares checked exception {ExceptionType} in a Spring-managed component.
+      Checked exceptions in @Service, @Repository, or @Component methods can break
+      @Transactional proxying — Spring AOP proxies do not roll back on checked exceptions
+      by default, leading to silent partial commits.
+    recommendation_template: |
+      Wrap checked exceptions in unchecked exceptions (RuntimeException subclass):
+        throw new {ServiceException}("Operation failed", checkedEx);
+      If rollback on the checked exception is needed, use:
+        @Transactional(rollbackFor = {CheckedException}.class)
+
+  missing_global_exception_handler:
+    severity: "MEDIUM"
+    applies_to: "all versions"
+    detection_keywords:
+      - "no @ControllerAdvice class"
+      - "exception handling in each controller"
+      - "try-catch in @RestController method"
+    explanation_template: |
+      No global exception handler (@ControllerAdvice + @ExceptionHandler) detected.
+      Exception handling scattered across controllers leads to inconsistent error responses,
+      duplicated code, and uncontrolled error format returned to API clients.
+    recommendation_template: |
+      Create a single @RestControllerAdvice class extending ResponseEntityExceptionHandler:
+        @RestControllerAdvice
+        public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+          @ExceptionHandler(EntityNotFoundException.class)
+          public ResponseEntity<{ErrorBody}> handleNotFound(EntityNotFoundException ex) { ... }
+        }
+
+  raw_stack_trace_to_client:
+    severity: "HIGH"
+    applies_to: "all versions"
+    detection_keywords:
+      - "exception.getMessage() in response body"
+      - "e.toString() in ResponseEntity"
+      - "stack trace in API response"
+    explanation_template: |
+      Raw exception detail ({detail}) returned to API client.
+      Exposes internal implementation details, package structure, and stack frames —
+      a security and information-disclosure risk.
+    recommendation_template: |
+      Return a sanitised error body:
+        { "status": 500, "message": "An unexpected error occurred" }
+      Log the full exception server-side. Never expose e.getMessage() or stack traces
+      to external consumers.
+
+  wrong_log_level_for_exception:
+    severity: "LOW"
+    applies_to: "all versions"
+    detection_keywords:
+      - "log.info with exception"
+      - "log.debug with exception"
+      - "log.warn without exception parameter"
+    explanation_template: |
+      Exception {ExceptionType} logged at {logLevel} level in {ClassName}.
+      INFO/DEBUG-level exception logging suppresses stack traces in production log configs,
+      making root-cause analysis difficult.
+    recommendation_template: |
+      Use log.error("message", exception) for unexpected exceptions.
+      Use log.warn("message", exception) for expected/recoverable exceptions.
+      Always pass the exception as the second parameter to preserve the stack trace.
+      Bad:  log.error(e.getMessage())
+      Good: log.error("Failed to process order {}", orderId, e)
+
+  # Version-specific patterns — apply based on detected Spring Boot version
+  problem_detail_not_used:
+    severity: "LOW"
+    applies_to: "Spring Boot 3.x only"
+    applies_when: "framework.spring_boot_version starts with 3"
+    detection_keywords:
+      - "@ControllerAdvice without ProblemDetail"
+      - "custom error body in Spring Boot 3.x"
+    explanation_template: |
+      Custom error response format used in {ClassName} when Spring Boot 3.x provides
+      built-in RFC 9457 ProblemDetail support. Reinventing the error envelope adds
+      maintenance overhead and diverges from the HTTP standard.
+    recommendation_template: |
+      Enable RFC 9457 ProblemDetail in application.yml:
+        spring.mvc.problemdetails.enabled: true
+      Return ProblemDetail from @ExceptionHandler methods:
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Order not found");
+        pd.setProperty("orderId", orderId);
+        return ResponseEntity.of(pd).build();
+    reference: "RFC 9457 — Problem Details for HTTP APIs"
+
+spring_boot_non_negotiables:
+  # Version-agnostic rules — apply to all Spring Boot versions
+  transactional_on_wrong_layer:
+    severity: "HIGH"
+    applies_to: "all versions"
+    detection_keywords:
+      - "@Transactional on @RestController"
+      - "@Transactional on @Controller"
+      - "@Transactional on @Repository method"
+    explanation_template: |
+      @Transactional found on {layer} ({ClassName}).
+      Transaction management belongs exclusively on the service layer.
+      On controllers: exposes transaction boundaries through the HTTP layer, risks
+      long-running transactions held open during serialisation.
+      On repositories: transactions should be managed by the caller (service), not
+      the data-access method — prevents composing multiple repository calls in one transaction.
+    recommendation_template: |
+      Move @Transactional to the @Service layer method that orchestrates the business operation.
+      Repository methods should be transaction-participants, not transaction-owners.
+
+  osiv_not_disabled:
+    severity: "MEDIUM"
+    applies_to: "all versions with JPA"
+    detection_keywords:
+      - "spring.jpa.open-in-view not set"
+      - "spring.jpa.open-in-view: true"
+      - "missing OSIV configuration"
+    detection_regex: "open-in-view\\s*:\\s*true"
+    explanation_template: |
+      Open Session In View (OSIV) is enabled (default in Spring Boot).
+      OSIV keeps the JPA EntityManager open for the entire HTTP request lifecycle,
+      including the view/serialisation phase. This causes lazy-loading to succeed
+      silently in controllers/serialisers, hiding N+1 query problems and holding
+      database connections longer than necessary.
+    recommendation_template: |
+      Disable OSIV in application.yml:
+        spring:
+          jpa:
+            open-in-view: false
+      Ensure all required associations are eagerly fetched or explicitly loaded
+      within the @Transactional service boundary before returning data to the controller.
+
+  value_over_configuration_properties:
+    severity: "MEDIUM"
+    applies_to: "all versions"
+    detection_keywords:
+      - "multiple @Value in same class"
+      - "@Value with related config keys"
+      - "3+ @Value annotations in same component"
+    explanation_template: |
+      {count} @Value annotations found in {ClassName} for related configuration keys ({keys}).
+      Scattered @Value usage makes configuration hard to discover, validate, and document.
+      It also bypasses type conversion, validation, and IDE completion provided by
+      @ConfigurationProperties.
+    recommendation_template: |
+      Group related properties under a @ConfigurationProperties class:
+        @ConfigurationProperties(prefix = "app.payment")
+        @Validated
+        public record PaymentProperties(
+          @NotBlank String apiUrl,
+          @NotNull Duration timeout,
+          int maxRetries
+        ) {}
+      Bind once, inject as a typed bean. Enables @Validated constraints at startup.
+
+  system_out_usage:
+    severity: "MEDIUM"
+    applies_to: "all versions"
+    detection_keywords:
+      - "System.out.println"
+      - "System.err.println"
+      - "System.out.print"
+    detection_regex: "System\\.(out|err)\\.(print|println|printf)"
+    explanation_template: |
+      System.out/err used in {ClassName}.{methodName}().
+      Console output bypasses the logging framework — no log levels, no structured output,
+      no correlation IDs, no log aggregation, no ability to suppress in production.
+    recommendation_template: |
+      Use SLF4J with Lombok @Slf4j:
+        @Slf4j
+        public class {ClassName} {
+          log.info("Processing order {}", orderId);
+          log.error("Failed to process", e);
+        }
+
+  actuator_over_exposed:
+    severity: "HIGH"
+    applies_to: "all versions with Actuator"
+    detection_keywords:
+      - "management.endpoints.web.exposure.include: '*'"
+      - "expose all actuator endpoints"
+    detection_regex: "web\\.exposure\\.include\\s*:\\s*['\"]?\\*['\"]?"
+    explanation_template: |
+      All Actuator endpoints exposed via wildcard (*) in {configFile}.
+      Endpoints such as /actuator/env, /actuator/heapdump, /actuator/shutdown expose
+      sensitive runtime data and, in the case of shutdown, allow remote application
+      termination. This is a critical security risk in any non-local environment.
+    recommendation_template: |
+      Explicitly list only required endpoints:
+        management:
+          endpoints:
+            web:
+              exposure:
+                include: "health,info,metrics"
+      Secure non-public endpoints with Spring Security.
+      Never expose env, heapdump, or shutdown in production.
+
+  missing_bean_validation:
+    severity: "MEDIUM"
+    applies_to: "all versions"
+    detection_keywords:
+      - "@RequestBody without @Valid"
+      - "@RequestBody without @Validated"
+      - "no validation on controller input"
+    explanation_template: |
+      @RequestBody parameter in {ClassName}.{methodName}() has no @Valid or @Validated annotation.
+      Without bean validation, invalid input silently passes into the service layer,
+      requiring defensive null/range checks scattered throughout business logic.
+    recommendation_template: |
+      Add @Valid to @RequestBody parameters:
+        public ResponseEntity<OrderDTO> createOrder(@Valid @RequestBody CreateOrderRequest request) {}
+      Define constraints on the request class using jakarta.validation annotations:
+        @NotNull, @NotBlank, @Size, @Min, @Max, @Pattern, @Email
+      Pair with a @ControllerAdvice handler for MethodArgumentNotValidException.
+
+  null_return_from_controller:
+    severity: "MEDIUM"
+    applies_to: "all versions"
+    detection_keywords:
+      - "return null from @RequestMapping"
+      - "nullable return type in controller"
+    explanation_template: |
+      {ClassName}.{methodName}() returns null from a @RequestMapping method.
+      Spring MVC converts a null return to an HTTP 200 with no body, which is ambiguous
+      and misleading to API clients.
+    recommendation_template: |
+      Always return ResponseEntity with an explicit status:
+        return ResponseEntity.notFound().build();            // 404
+        return ResponseEntity.ok(result);                    // 200 with body
+        return ResponseEntity.noContent().build();           // 204
+
+  no_profile_based_config:
+    severity: "MEDIUM"
+    applies_to: "all versions"
+    detection_keywords:
+      - "hardcoded environment URL"
+      - "hardcoded DB URL"
+      - "same config for all environments"
+    explanation_template: |
+      Infrastructure configuration (e.g., {configKey}) appears hardcoded without
+      profile-based override capability in {configFile}.
+      Hardcoded infrastructure endpoints make environment-specific deployment impossible
+      without modifying source files.
+    recommendation_template: |
+      Use Spring profile-specific configuration files:
+        application.yml          — shared/default values
+        application-local.yml    — local dev overrides (gitignored)
+        application-staging.yml  — staging environment
+        application-prod.yml     — production (populated by secret manager / env vars)
+      Activate profiles via: spring.profiles.active or SPRING_PROFILES_ACTIVE env var.
+      Never commit application-local.yml or application-prod.yml with real credentials.
 
 jdk_modernization:
   jdk8:
@@ -368,23 +731,39 @@ report_template:
 
 severity_levels:
   high:
-    description: "Security risks, serious architectural violations, testability blockers"
+    description: "Security risks, serious architectural violations, testability blockers, data-integrity risks"
     examples:
       - "Exposed secrets"
       - "Circular dependencies"
       - "Service locator pattern"
       - "Hidden dependencies preventing testing"
+      - "Empty or swallowed exception (silent failure)"
+      - "Raw stack trace returned to API client"
+      - "@Transactional on controller layer"
+      - "Actuator endpoints exposed with wildcard (*)"
   medium:
-    description: "SOLID violations, DI anti-patterns, significant duplication"
+    description: "SOLID violations, DI anti-patterns, significant duplication, operational risk"
     examples:
       - "Field injection"
       - "SRP violations"
       - "Tight coupling"
       - "DRY violations"
+      - "Broad catch (Exception/Throwable) without rethrow"
+      - "Checked exception in Spring component"
+      - "Missing @ControllerAdvice global exception handler"
+      - "OSIV not disabled (spring.jpa.open-in-view not false)"
+      - "Scattered @Value instead of @ConfigurationProperties"
+      - "System.out.println instead of SLF4J"
+      - "Missing @Valid on @RequestBody"
+      - "Over-abstraction — interface with single impl created only for mocking"
+      - "Wrong test type (@SpringBootTest for unit/slice concerns)"
   low:
-    description: "Modernization opportunities, minor improvements"
+    description: "Modernization opportunities, minor improvements, version-specific suggestions"
     examples:
       - "JDK feature suggestions"
       - "Code style improvements"
       - "Minor refactoring opportunities"
+      - "ProblemDetail (RFC 9457) not used (Spring Boot 3.x)"
+      - "Exception not passed to log.error() — stack trace lost"
+      - "Mutation-hostile method pattern"
 

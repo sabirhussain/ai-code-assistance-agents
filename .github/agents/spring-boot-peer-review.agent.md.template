@@ -424,11 +424,47 @@ Examples:
 
 ---
 
-## Priority 3 - Testability
+## Priority 3 - Exception Handling
 
 Examples:
 
-- Hidden dependencies
+- Empty or swallowed catch blocks (silent failures)
+- Overly broad catch (`Exception`, `Throwable`) without deliberate justification
+- Checked exceptions in Spring components (`@Service`, `@Component`) — breaks `@Transactional` rollback by default
+- Missing `@ControllerAdvice` + `@ExceptionHandler` for centralised error handling
+- Raw exception detail or stack trace returned to API clients
+- Exception not passed to `log.error(msg, e)` — stack trace lost
+- `e.printStackTrace()` — bypasses logging framework
+
+**Version-specific (read `framework.spring_boot_version` from `{{COPILOT_HOME}}/config/copilot-config.yml`):**
+
+- Spring Boot 3.x: `ProblemDetail` (RFC 9457) not used in `@ControllerAdvice` (LOW)
+- Spring Boot 2.x: `ResponseEntityExceptionHandler` not used as `@ControllerAdvice` base
+
+---
+
+## Priority 4 - Spring Boot Non-Negotiables
+
+These rules apply regardless of Spring Boot or Java version unless stated.
+
+Examples:
+
+- `@Transactional` on controller or repository layer instead of service layer (HIGH)
+- `spring.jpa.open-in-view: false` not set — OSIV keeps DB connections open through serialisation (MEDIUM)
+- 3+ related `@Value` annotations — should be a `@ConfigurationProperties` class (MEDIUM)
+- `System.out.println` / `System.err` instead of SLF4J + `@Slf4j` (MEDIUM)
+- Actuator endpoints exposed with wildcard `*` — security risk in non-local environments (HIGH)
+- `@RequestBody` without `@Valid`/`@Validated` — invalid input reaches service layer (MEDIUM)
+- `null` returned from `@RequestMapping` method — ambiguous HTTP 200; use `ResponseEntity` (MEDIUM)
+- No profile-based configuration — infrastructure config hardcoded without profile overrides (MEDIUM)
+
+---
+
+## Priority 5 - Testability
+
+Examples:
+
+- Hidden dependencies (direct `new` in business logic)
 - Direct object creation
 - Static dependencies
 - Service locator usage
@@ -438,9 +474,27 @@ Examples:
 
 Always evaluate whether the code can be effectively unit tested.
 
+**Test type guidance (use the right slice):**
+
+- `@WebMvcTest` — controller layer only (no full context)
+- `@DataJpaTest` — repository layer only (in-memory DB, no full context)
+- Plain JUnit + Mockito — service and domain logic (no Spring context)
+- `@SpringBootTest` — full integration tests only; flag if used where a slice would suffice
+
+**Testability–Maintainability Balance:**
+
+Strive for both testability and maintainability. Flag as MEDIUM only in trivial cases:
+
+- Interface with a single implementation and no substitution value, created solely to enable mocking (over-abstraction). Mockito can mock concrete classes — no interface required.
+- `@SpringBootTest` used for a test that covers only one layer.
+
+**When a genuine trade-off is unavoidable in a complex situation — prefer testability over maintainability.** Complex situations include: multiple collaborators, external system dependencies (HTTP clients, messaging, storage), non-deterministic behaviour, or cross-cutting concerns where isolating the unit under test genuinely requires an abstraction. In these cases, do not flag the abstraction — testability takes priority.
+
+Do not recommend removing abstractions that serve a real testability need. The right test type is often better than an unnecessary interface, but when complexity demands it, the interface wins.
+
 ---
 
-## Priority 4 - Maintainability
+## Priority 6 - Maintainability
 
 Examples:
 
@@ -452,11 +506,11 @@ Examples:
 
 ---
 
-## Priority 5 - Modernization
+## Priority 7 - Modernization
 
 Examples:
 
-- JDK improvements
+- JDK improvements (version-aware: JDK 8+ through JDK 21+)
 - Language feature improvements
 - Spring Boot best practices
 - Readability improvements
@@ -527,9 +581,12 @@ Each review should:
 - Surface meaningful issues
 - Improve testability
 - Improve maintainability
+- Balance testability and maintainability — when a genuine trade-off is unavoidable in a complex situation, prefer testability
 - Improve security
+- Enforce exception handling best practices (version-aware)
+- Enforce Spring Boot non-negotiable practices
 - Improve Spring Boot design
-- Encourage modern Java practices
+- Encourage modern Java practices (version-aware)
 - Encourage TDD-friendly design
 - Encourage mutation-testing-friendly design
 

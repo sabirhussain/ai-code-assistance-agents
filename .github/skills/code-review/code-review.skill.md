@@ -213,8 +213,52 @@ Mandatory assessment for every Java file:
 - Are collaborators injected?
 - Is behavior deterministic?
 - Hidden dependencies, static calls, hard-coded values?
+- Is the correct Spring Boot test slice being used? (`@WebMvcTest` for controllers, `@DataJpaTest` for repositories, plain JUnit + Mockito for service/domain logic, `@SpringBootTest` only for full integration tests)
+- Is the code mutation-testing friendly? (all branches have meaningful observable differences; no trivial boolean methods with no path differentiation)
 
-## 6. JDK Modernization Opportunities
+**Testability–Maintainability Balance:**
+
+Strive for both testability and maintainability. Flag over-abstraction as MEDIUM only in trivial cases: an interface with a single implementation, no substitution or polymorphism value, where Mockito can mock the concrete class directly. The abstraction adds indirection without benefit.
+
+**When a genuine trade-off is unavoidable — prefer testability.** In complex situations (multiple collaborators, external system dependencies, non-deterministic behaviour, cross-cutting concerns), an abstraction that improves testability is justified even if it adds maintenance overhead. Do not flag over-abstraction when it serves a real testability need in a complex scenario.
+
+## 6. Exception Handling
+
+**Patterns:** Load from `exception_handling` in `.github/patterns/review-patterns.yml`
+
+**Version-agnostic (all Spring Boot and Java versions):**
+
+- **Empty or swallowed catch blocks** — silent failures, no logging, no rethrow (HIGH)
+- **Overly broad catch** (`Exception`, `Throwable`) without deliberate justification (MEDIUM)
+- **Checked exceptions in Spring components** — breaks `@Transactional` rollback by default; prefer unchecked exceptions in `@Service`/`@Component`/`@Repository` (MEDIUM)
+- **Missing `@ControllerAdvice` + `@ExceptionHandler`** — exception handling scattered across controllers produces inconsistent error responses (MEDIUM)
+- **Raw stack trace or `e.getMessage()` returned to API clients** — information disclosure (HIGH)
+- **Wrong log level** — exception not passed as second argument to `log.error(msg, e)`; stack trace lost (LOW)
+- **`e.printStackTrace()`** — bypasses logging framework (MEDIUM, cross-reference with security_patterns.logging)
+
+**Version-specific (read `framework.spring_boot_version` from copilot-config.yml):**
+
+- **Spring Boot 3.x only** — `ProblemDetail` (RFC 9457) not used in `@ControllerAdvice`; Spring Boot 3.x provides built-in support (LOW). Enable with `spring.mvc.problemdetails.enabled: true`
+- **Spring Boot 2.x** — guide toward `ResponseEntityExceptionHandler` as the `@ControllerAdvice` base class
+
+## 7. Spring Boot Non-Negotiable Practices
+
+**Patterns:** Load from `spring_boot_non_negotiables` in `.github/patterns/review-patterns.yml`
+
+Non-negotiable practices that apply regardless of Java or Spring Boot version unless otherwise noted.
+
+**Version-agnostic (all Spring Boot versions):**
+
+- **`@Transactional` on wrong layer** — never on `@Controller`/`@RestController`; repository methods should participate in, not own, transactions; belongs exclusively on `@Service` (HIGH)
+- **OSIV not disabled** — `spring.jpa.open-in-view: false` must be set to prevent silent lazy-loading outside the service boundary and to release DB connections promptly (MEDIUM)
+- **Scattered `@Value` instead of `@ConfigurationProperties`** — 3+ related `@Value` annotations in the same class should be grouped into a typed `@ConfigurationProperties` class with `@Validated` (MEDIUM)
+- **`System.out.println` / `System.err`** — bypasses logging framework; use SLF4J with Lombok `@Slf4j` (MEDIUM)
+- **Actuator endpoints over-exposed** — wildcard `*` in `management.endpoints.web.exposure.include` is a security risk in any non-local environment (HIGH)
+- **Missing `@Valid`/`@Validated` on `@RequestBody`** — invalid input reaches the service layer unvalidated (MEDIUM)
+- **`null` returned from `@RequestMapping` methods** — ambiguous HTTP 200 with no body; use `ResponseEntity` with explicit status (MEDIUM)
+- **No profile-based configuration** — infrastructure URLs/keys hardcoded without profile-specific override files (MEDIUM)
+
+## 8. JDK Modernization Opportunities
 
 **Patterns:** Load from `jdk_modernization` in `.github/patterns/review-patterns.yml` by JDK version
 
@@ -225,7 +269,7 @@ Suggest improvements compatible with detected JDK version:
 - **JDK 17+**: Switch expressions, Text blocks, Pattern matching, Records, Sealed classes
 - **JDK 21+**: Pattern matching enhancements, Sequenced collections
 
-## 7. Secrets and Sensitive Data Detection
+## 9. Secrets and Sensitive Data Detection
 
 **Patterns:** Load from `security_patterns` in `.github/patterns/review-patterns.yml`
 
@@ -243,9 +287,9 @@ Recommend: Environment variables, vault solutions (AWS Secrets Manager, Azure Ke
 
 **Load severity levels from `.github/patterns/review-patterns.yml` → `severity_levels`**
 
-- **HIGH**: Security risks, serious architectural violations, testability blockers
-- **MEDIUM**: SOLID violations, DI anti-patterns, significant duplication
-- **LOW**: Modernization opportunities, minor improvements
+- **HIGH**: Security risks, serious architectural violations, testability blockers, data-integrity risks (e.g., swallowed exceptions, @Transactional on wrong layer, actuator over-exposure)
+- **MEDIUM**: SOLID violations, DI anti-patterns, significant duplication, exception handling gaps, Spring Boot non-negotiable violations, over-abstraction
+- **LOW**: Modernization opportunities, minor improvements, version-specific suggestions (e.g., ProblemDetail)
 
 ---
 
@@ -285,7 +329,10 @@ Act as an experienced Principal Java Architect performing a practical and educat
 - DRY
 - KISS
 - Spring Boot Dependency Injection Best Practices
-- JDK Modernization
+- Testability and Maintainability — prefer testability in complex trade-offs
+- Exception Handling (version-aware: all Spring Boot versions; ProblemDetail for Spring Boot 3.x)
+- Spring Boot Non-Negotiable Practices (OSIV, @Transactional placement, @ConfigurationProperties, Actuator, validation)
+- JDK Modernization (version-aware: JDK 8+ through JDK 21+)
 - Secret Detection
 - Configuration Security
 
