@@ -86,12 +86,12 @@ The agent will:
 | Metric                     | Value     |
 |----------------------------|-----------|
 | Total files                | 8         |
-| Configuration lines        | 46        |
-| Instruction lines          | 67        |
-| Pattern lines (shared)     | 625       |
-| Agent lines                | 647       |
-| Skill lines                | 1,112     |
-| **Total lines**            | **3,004** |
+| Configuration lines        | 45        |
+| Instruction lines          | 71        |
+| Pattern lines (shared)     | 1,004     |
+| Agent lines                | 702       |
+| Skill lines                | 1,160     |
+| **Total lines**            | **2,982** |
 | Token reduction (1st call) | 32%       |
 | Token reduction (cached)   | 61%       |
 
@@ -350,6 +350,6 @@ For questions or issues:
 5. Try reloading VS Code window to refresh configuration
 
 ---
-**Last Updated:** July 3, 2026  
-**Version:** 2.0.0  
+**Last Updated:** August 2, 2026  
+**Version:** 2.1.0  
 **Status:** ✅ Production Ready

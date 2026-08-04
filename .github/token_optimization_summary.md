@@ -1,6 +1,6 @@
 # Token Optimization Implementation Summary
 
-**Date:** June 25, 2026  
+**Date:** June 25, 2026 | **Last Updated:** August 2, 2026  
 **Status:** ✅ Complete
 
 ## Overview
@@ -40,7 +40,9 @@ improving output consistency.
 - SOLID principle violation patterns (SRP, OCP, LSP, ISP, DIP)
 - DRY and KISS violation patterns
 - Spring DI anti-patterns (field injection, service locator, circular dependencies)
-- Testability anti-patterns (hidden dependencies, static calls, hard-coded values)
+- Testability anti-patterns (hidden dependencies, static calls, hard-coded values, over-abstraction, wrong test type, mutation-hostile patterns)
+- Exception handling patterns (empty catch, swallowed exceptions, broad catch, checked exceptions in Spring components, missing `@ControllerAdvice`, raw stack trace to client, wrong log level — version-aware: includes `ProblemDetail` RFC 9457 for Spring Boot 3.x)
+- Spring Boot non-negotiable patterns (`@Transactional` placement, OSIV, `@ConfigurationProperties`, SLF4J enforcement, Actuator exposure, `@Valid`, null returns, profile-based config)
 - Security patterns (secrets detection, logging risks)
 - JDK modernization suggestions by version (8, 11, 17, 21)
 - Report template structure
@@ -51,6 +53,7 @@ improving output consistency.
 - Consistent finding generation
 - Structured detection rules and recommendations
 - Eliminates 500+ lines of prose examples from skill file
+- Extended in August 2026: added exception handling, Spring Boot non-negotiable, and enhanced testability pattern categories — coverage increase is intentional; pattern file is cached so per-invocation cost is unaffected after first session read
 
 ---
 
@@ -170,12 +173,17 @@ session_cache:
 | copilot-instructions.md          | 62        | 1,550       |
 | copilot-config.yml               | 38        | 950         |
 | test-patterns.yml                | 329       | 8,225       |
-| review-patterns.yml              | 428       | 10,700      |
+| review-patterns.yml              | 769       | 19,225      |
 | write-failing-test.skill.md      | 480       | 12,000      |
-| code-review.skill.md             | 320       | 8,000       |
+| code-review.skill.md             | 338       | 8,450       |
 | tdd-generator.agent.md           | 75        | 1,875       |
-| spring-boot-peer-review.agent.md | 480       | 12,000      |
-| **Total**                        | **2,212** | **~55,300** |
+| spring-boot-peer-review.agent.md | 598       | 14,950      |
+| **Total**                        | **2,689** | **~67,225** |
+
+> **Note:** The increase in `review-patterns.yml` (428 → 769 lines) and `spring-boot-peer-review.agent.md`
+> (480 → 598 lines) reflects intentional coverage expansion — new exception handling, Spring Boot
+> non-negotiable, and testability balance categories added in August 2026. `review-patterns.yml` is
+> cached after the first session read, so per-invocation cost is unaffected for subsequent uses.
 
 **But more importantly:**
 
@@ -305,7 +313,7 @@ Total: ~49k tokens
 ```
 User: Review UserService.java
 Agent: [reads cached config + patterns = 0 tokens]
-Agent: [reads 320-line condensed skill = 8k tokens]
+Agent: [reads 338-line condensed skill = 8.5k tokens]
 Agent: [runs git status ONCE per token rule #8]
 Agent: [reads ONLY UserService.java per token rule #4 = 2k tokens]
 Agent: [follows token rule #5: no semantic_search]

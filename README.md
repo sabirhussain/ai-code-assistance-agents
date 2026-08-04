@@ -44,10 +44,12 @@ Performs intelligent code reviews focused on architecture, security, and testabi
 **Review Priorities**:
 
 1. 🔴 **Security** - Credentials, secrets, vulnerabilities
-2. 🟠 **Architecture** - SOLID violations, DI anti-patterns
-3. 🟡 **Testability** - Hidden dependencies, static calls
-4. 🟢 **Maintainability** - DRY, complexity, method size
-5. 🔵 **Modernization** - JDK improvements, best practices
+2. 🟠 **Architectural Risks** - SOLID violations, DI anti-patterns
+3. 🟡 **Exception Handling** - Swallowed exceptions, missing `@ControllerAdvice`, `ProblemDetail` (Spring Boot 3.x)
+4. 🟡 **Spring Boot Non-Negotiables** - OSIV, `@Transactional` placement, `@Valid`, Actuator exposure
+5. 🟢 **Testability** - Hidden dependencies, static calls; prefer testability in complex trade-offs
+6. 🟢 **Maintainability** - DRY, KISS, complexity, method size
+7. 🔵 **Modernization** - JDK improvements, best practices (version-aware)
 
 ## 📦 What Gets Installed
 
