@@ -288,7 +288,7 @@ install_agents() {
     
     mkdir -p "${INSTALL_DIR}/agents"
     
-    local agents=("tdd-generator" "spring-boot-peer-review")
+    local agents=("tdd-generator" "spring-boot-peer-review" "repo-config")
     
     for agent in "${agents[@]}"; do
         local source=".github/agents/${agent}.agent.md.template"
@@ -399,6 +399,7 @@ verify_installation() {
     local expected_files=(
         "agents/tdd-generator.agent.md"
         "agents/spring-boot-peer-review.agent.md"
+        "agents/repo-config.agent.md"
         "skills/write-failing-test/write-failing-test.skill.md"
         "skills/code-review/code-review.skill.md"
         "config/copilot-config.yml"
@@ -445,6 +446,7 @@ display_summary() {
     fi
     
     echo "🤖 Installed Agents:"
+    echo "   • repo-config              - Per-repo config generator (run once per repo)"
     echo "   • tdd-generator            - TDD unit test generator"
     echo "   • spring-boot-peer-review  - Java/Spring Boot peer reviewer"
     echo ""
@@ -466,18 +468,23 @@ display_summary() {
     fi
     
     echo "🚀 Next Steps:"
-    echo "   1. Start using agents in any repository with GitHub Copilot CLI"
-    echo "   2. Customize ~/.copilot/config/copilot-config.yml for your projects"
+    echo "   1. Run 'repo-config' agent once in each repo to generate local config:"
+    echo "      $ gh copilot agent repo-config"
+    echo "   2. Start using tdd-generator and spring-boot-peer-review agents"
+    echo "   3. Global fallback config: ~/.copilot/config/copilot-config.yml"
     if [ "${usage_guide_exists}" = true ]; then
-        echo "   3. Read ~/.copilot/USAGE.md for examples and best practices"
+        echo "   4. Read ~/.copilot/USAGE.md for examples and best practices"
     fi
     echo ""
     
     echo "💡 Quick Start:"
-    echo "   # Generate tests for a feature"
+    echo "   # Step 1 — set up config for your repo (once per repo)"
+    echo "   $ gh copilot agent repo-config"
+    echo ""
+    echo "   # Step 2 — generate tests for a feature"
     echo "   $ gh copilot agent tdd-generator"
     echo ""
-    echo "   # Review code changes"
+    echo "   # Step 3 — review code changes"
     echo "   $ gh copilot agent spring-boot-peer-review"
     echo ""
     

@@ -14,8 +14,8 @@ You are a world-class software engineer specializing in Test-Driven Development 
 
 **On first invocation of this agent in a session:**
 
-1. **Read and cache** `{{COPILOT_HOME}}/config/copilot-config.yml` — store all values for session duration
-2. **Read and cache** `{{COPILOT_HOME}}/patterns/test-patterns.yml` — store pattern definitions for session duration
+1. **Resolve and cache config** — check `.github/copilot-config.yml` first (repo-local, gitignored); if absent, use `{{COPILOT_HOME}}/config/copilot-config.yml` (global). If **neither exists**, stop immediately and reply: *"No project config found. Run `gh copilot agent repo-config` to generate one for this repo."*
+2. **Resolve and cache patterns** — check `.github/patterns/test-patterns.yml` first (repo-local); if absent, use `{{COPILOT_HOME}}/patterns/test-patterns.yml` (global)
 3. **Never re-read** these files unless user explicitly requests "reload configuration"
 
 **During test generation:**
@@ -56,7 +56,7 @@ Do not generate tests without first applying this skill.
 
 ## Project Conventions
 
-**Load ALL values from `{{COPILOT_HOME}}/config/copilot-config.yml` (cached at session start):**
+**Load ALL values from resolved config file (cached at session start — see Token Economy rule 1):**
 
 - Language, JDK version, build tool
 - Framework versions
@@ -64,7 +64,7 @@ Do not generate tests without first applying this skill.
 - Testing framework, mutation tool, PIT plugin version
 - Nested test preference, AAA comments preference
 
-**Load ALL test patterns from `{{COPILOT_HOME}}/patterns/test-patterns.yml` (cached at session start):**
+**Load ALL test patterns from resolved patterns file (cached at session start — see Token Economy rule 2):**
 
 - Test structure by SUT type (controller, service, component, repository)
 - Dependency inference rules

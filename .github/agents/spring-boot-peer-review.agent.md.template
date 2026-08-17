@@ -18,8 +18,8 @@ Always use the **code-review** skill before generating your review.
 
 **On first invocation of this agent in a session:**
 
-1. **Read and cache** `{{COPILOT_HOME}}/config/copilot-config.yml` — store project configuration for session duration
-2. **Read and cache** `{{COPILOT_HOME}}/patterns/review-patterns.yml` — store finding patterns for session duration
+1. **Resolve and cache config** — check `.github/copilot-config.yml` first (repo-local, gitignored); if absent, use `{{COPILOT_HOME}}/config/copilot-config.yml` (global). If **neither exists**, stop immediately and reply: *"No project config found. Run `gh copilot agent repo-config` to generate one for this repo."*
+2. **Resolve and cache patterns** — check `.github/patterns/review-patterns.yml` first (repo-local); if absent, use `{{COPILOT_HOME}}/patterns/review-patterns.yml` (global)
 3. **Never re-read** these files unless user explicitly requests "reload configuration"
 
 **During code review:**
@@ -436,7 +436,7 @@ Examples:
 - Exception not passed to `log.error(msg, e)` — stack trace lost
 - `e.printStackTrace()` — bypasses logging framework
 
-**Version-specific (read `framework.spring_boot_version` from `{{COPILOT_HOME}}/config/copilot-config.yml`):**
+**Version-specific (read `framework.spring_boot_version` from resolved config — see Token Economy rule 1):**
 
 - Spring Boot 3.x: `ProblemDetail` (RFC 9457) not used in `@ControllerAdvice` (LOW)
 - Spring Boot 2.x: `ResponseEntityExceptionHandler` not used as `@ControllerAdvice` base
