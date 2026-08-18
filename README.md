@@ -77,6 +77,7 @@ Performs intelligent code reviews focused on architecture, security, and testabi
 5. 🟢 **Testability** - Hidden dependencies, static calls; prefer testability in complex trade-offs
 6. 🟢 **Maintainability** - DRY, KISS, complexity, method size
 7. 🔵 **Modernization** - JDK improvements, best practices (version-aware)
+8. ⚪ **Backward Compatibility** *(opt-in)* - API breaks, REST contract changes, DTO/serialization, config renames, crypto algorithm changes — say *"check backward compatibility"* or *"breaking changes"*
 
 ## 📦 What Gets Installed
 
@@ -88,7 +89,8 @@ Performs intelligent code reviews focused on architecture, security, and testabi
 │   └── repo-config.agent.md
 ├── skills/
 │   ├── write-failing-test/
-│   └── code-review/
+│   ├── code-review/
+│   └── backward-compat/          ← backward compatibility audit skill
 ├── config/
 │   └── copilot-config.yml          ← global default (used when no local config exists)
 ├── patterns/
@@ -135,6 +137,18 @@ Agent: [Reviews file and reports security, architecture, and testability issues]
 $ gh copilot agent spring-boot-peer-review "deep review src/main/java/com/example/auth/"
 
 Agent: [Performs cross-file analysis with dependency checking]
+```
+
+### Backward Compatibility Audit
+
+```bash
+$ gh copilot agent spring-boot-peer-review
+
+You: Check backward compatibility of my changes
+
+Agent: [Audits public API, REST contracts, DTOs, config properties, Spring beans,
+        JPA mappings, and cryptographic configurations for breaking changes.
+        Produces a ⚠️ Backward Compatibility Warnings section, or ✅ All Clear.]
 ```
 
 ## ⚙️ Configuration

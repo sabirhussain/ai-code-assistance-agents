@@ -32,6 +32,7 @@ echo "  - ${INSTALL_DIR}/agents/spring-boot-peer-review.agent.md"
 echo "  - ${INSTALL_DIR}/agents/repo-config.agent.md"
 echo "  - ${INSTALL_DIR}/skills/write-failing-test/write-failing-test.skill.md"
 echo "  - ${INSTALL_DIR}/skills/code-review/code-review.skill.md"
+echo "  - ${INSTALL_DIR}/skills/backward-compat/backward-compat.skill.md"
 echo "  - ${INSTALL_DIR}/config/copilot-config.yml"
 echo "  - ${INSTALL_DIR}/patterns/test-patterns.yml"
 echo "  - ${INSTALL_DIR}/patterns/review-patterns.yml"
@@ -57,6 +58,7 @@ rm -f "${INSTALL_DIR}/agents/spring-boot-peer-review.agent.md"
 rm -f "${INSTALL_DIR}/agents/repo-config.agent.md"
 rm -f "${INSTALL_DIR}/skills/write-failing-test/write-failing-test.skill.md"
 rm -f "${INSTALL_DIR}/skills/code-review/code-review.skill.md"
+rm -f "${INSTALL_DIR}/skills/backward-compat/backward-compat.skill.md"
 rm -f "${INSTALL_DIR}/config/copilot-config.yml"
 rm -f "${INSTALL_DIR}/patterns/test-patterns.yml"
 rm -f "${INSTALL_DIR}/patterns/review-patterns.yml"
@@ -66,6 +68,7 @@ rm -f "${INSTALL_DIR}/USAGE.md"
 # Remove only the specific skill subdirectories if they are empty
 rmdir "${INSTALL_DIR}/skills/write-failing-test" 2>/dev/null || true
 rmdir "${INSTALL_DIR}/skills/code-review" 2>/dev/null || true
+rmdir "${INSTALL_DIR}/skills/backward-compat" 2>/dev/null || true
 
 # Note: We do NOT remove parent directories (agents, skills, instructions, patterns)
 # as they may contain other custom agents, skills, or configurations

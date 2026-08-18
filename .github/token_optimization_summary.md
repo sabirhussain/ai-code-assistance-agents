@@ -55,6 +55,25 @@ improving output consistency.
 - Eliminates 500+ lines of prose examples from skill file
 - Extended in August 2026: added exception handling, Spring Boot non-negotiable, and enhanced testability pattern categories — coverage increase is intentional; pattern file is cached so per-invocation cost is unaffected after first session read
 
+### 3. `.github/skills/backward-compat/backward-compat.skill.md` ← NEW (August 17, 2026)
+
+**Purpose:** Standalone opt-in skill for backward compatibility audits
+
+**Contents:**
+
+- Public Java API breaking change detection (removed/renamed methods, classes, constructors, fields)
+- REST contract breaking changes (removed/renamed endpoints, added required params, changed HTTP method)
+- DTO and JSON serialization contract checks (`@JsonProperty`, field type changes)
+- Spring configuration property contract checks
+- Spring bean injection contract checks (`@Bean`, `@Qualifier` names)
+- JPA / persistence schema contract checks
+- Exception contract checks
+- Cryptographic backward compatibility (algorithm swaps, key size, cipher mode, padding, IV handling, output encoding, password hashing, KDF, JWT signing, keystore aliases, asymmetric key rotation)
+
+**Token Economy Design:**
+
+This skill is **opt-in and explicit-only**. It is never loaded during routine `code-review` invocations. It contributes **zero tokens** to session cost unless the user explicitly requests a backward compatibility audit. This keeps routine review costs unchanged.
+
 ---
 
 ## Files Updated

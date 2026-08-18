@@ -50,6 +50,48 @@ Do not perform a review without first applying this skill.
 
 ---
 
+# Optional Skill — Backward Compatibility Audit
+
+**This skill is opt-in and only invoked when the user explicitly requests it.**
+
+Invoke the `backward-compat` skill when the user's request contains any of the following trigger phrases:
+
+- *"check backward compatibility"*
+- *"backward compat"*
+- *"backward compatible"*
+- *"is this backward compatible"*
+- *"are these changes backward compatible"*
+- *"breaking changes"*
+- *"will this break existing clients"*
+- *"API compatibility"*
+- *"crypto compatibility"*
+- *"encryption compatibility"*
+
+When triggered, invoke:
+
+```text
+backward-compat
+```
+
+See `{{COPILOT_HOME}}/skills/backward-compat/backward-compat.skill.md` for complete specification.
+
+The `backward-compat` skill checks for breaking changes in:
+
+- Public Java API (methods, classes, constructors, fields)
+- REST endpoint and parameter contracts
+- DTO and JSON serialization contracts
+- Spring configuration property contracts
+- Spring bean injection contracts (`@Qualifier`, `@Bean` names)
+- JPA / persistence schema contracts
+- Exception type contracts
+- Encryption / decryption algorithm, key, IV, encoding, password hashing, KDF, JWT signing, and keystore contracts
+
+The `backward-compat` skill produces a standalone **⚠️ Backward Compatibility Warnings** section — separate from the standard code-review report. Both reports may be included in the same response when both skills are invoked together.
+
+> **Token Economy Note:** This skill is never loaded during routine reviews. It contributes **zero tokens** unless explicitly triggered — consistent with the opt-in, token-efficient design of this agent.
+
+---
+
 # Review Modes
 
 ## Default Mode: Targeted Review
@@ -515,6 +557,29 @@ Examples:
 - Spring Boot best practices
 - Readability improvements
 
+---
+
+## Priority 8 - Backward Compatibility *(opt-in — invoke `backward-compat` skill when explicitly requested)*
+
+Examples:
+
+- Removed or renamed `public`/`protected` methods, classes, constructors, fields
+- Changed method signatures or return types
+- Removed or renamed REST endpoints or changed their HTTP method
+- Added required request parameters without a default value
+- Removed or renamed request/response DTO fields (`@JsonProperty`, field names)
+- Removed or renamed Spring config properties
+- Removed or renamed `@Bean`/`@Qualifier` names
+- Removed JPA entity fields mapped to database columns
+- Changed checked exception types on `public` methods *(MEDIUM)*
+- Changed encryption algorithm, key size, cipher mode, or padding scheme without migration path
+- Changed IV handling, ciphertext encoding, password hashing algorithm, or salt strategy
+- Changed KDF parameters (PBKDF2 iteration count, PRF, key length)
+- Changed JWT signing algorithm or rotated HMAC secret without a dual-verify window
+- Renamed or removed keystore alias; rotated asymmetric key pair without re-encrypting existing data
+
+> Trigger phrases: *"check backward compatibility"*, *"breaking changes"*, *"is this backward compatible?"*, *"will this break existing clients"*, *"API compatibility"*, *"encryption compatibility"*
+
 # Reviewer Behavior
 
 Always:
@@ -589,6 +654,7 @@ Each review should:
 - Encourage modern Java practices (version-aware)
 - Encourage TDD-friendly design
 - Encourage mutation-testing-friendly design
+- **Backward compatibility** (opt-in): detect breaking changes in API, REST contracts, DTOs, config, beans, JPA, and cryptographic configurations — invoked only when user explicitly requests it
 
 Default behavior must always be:
 
