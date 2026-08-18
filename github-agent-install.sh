@@ -91,7 +91,7 @@ OPTIONS:
 
 WHAT GETS INSTALLED:
     - Custom agents (TDD Generator, SpringBoot Peer Review)
-    - Skills (write-failing-test, code-review)
+    - Skills (write-failing-test, code-review, backward-compat)
     - Configuration templates
     - Pattern files
     - Usage guide
@@ -308,6 +308,7 @@ install_skills() {
     
     mkdir -p "${INSTALL_DIR}/skills/write-failing-test"
     mkdir -p "${INSTALL_DIR}/skills/code-review"
+    mkdir -p "${INSTALL_DIR}/skills/backward-compat"
     
     # Install write-failing-test skill
     local source=".github/skills/write-failing-test/write-failing-test.skill.md.template"
@@ -325,6 +326,15 @@ install_skills() {
     if download_file "${source}" "${target}"; then
         process_template "${target}"
         log_success "Installed: code-review skill"
+    fi
+    
+    # Install backward-compat skill
+    source=".github/skills/backward-compat/backward-compat.skill.md.template"
+    target="${INSTALL_DIR}/skills/backward-compat/backward-compat.skill.md"
+    
+    if download_file "${source}" "${target}"; then
+        process_template "${target}"
+        log_success "Installed: backward-compat skill"
     fi
 }
 
@@ -402,6 +412,7 @@ verify_installation() {
         "agents/repo-config.agent.md"
         "skills/write-failing-test/write-failing-test.skill.md"
         "skills/code-review/code-review.skill.md"
+        "skills/backward-compat/backward-compat.skill.md"
         "config/copilot-config.yml"
         "instructions/copilot-instructions.md"
     )
