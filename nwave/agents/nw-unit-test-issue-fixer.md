@@ -69,9 +69,9 @@ At the start of execution, create these tasks using TaskCreate and follow them i
    that as the only outcome and go straight to Emit Fix Report. Otherwise read every named test file under the test
    source root, every named production file under the production source root (read-only), the class's entry in
    `.ai-test-engineer/test-strategy.yaml`, and the enabled KB rules (an orchestrator-supplied pre-filtered subset takes
-   priority over re-reading the full `.ai-test-engineer/test-review-kb.yaml`). Gate: actionable finding list compiled;
-   every referenced file resolved or its absence noted; the exact review-file path used is recorded for the fix-report's
-   `review_ref` field.
+   priority over re-reading the full `.ai-test-engineer/test-review-kb.yaml`; if neither is available, note the absence
+   and proceed without KB-cited fixes for this run). Gate: actionable finding list compiled; every referenced file
+   resolved or its absence noted; the exact review-file path used is recorded for the fix-report's `review_ref` field.
 2. **Draft Fix Pass** — For each actionable finding, classify it against the skill's fix-pattern-per-finding-category
    table and propose exactly one draft outcome: a concrete draft fix naming the exact edit to the exact test method
    (category a), or a draft escalation citing the strategy's intended behavior versus the production class's current

@@ -64,9 +64,12 @@ At the start of execution, create these tasks using TaskCreate and follow them i
 1. **Gather Inputs** — Load `~/.claude/skills/nw-unit-test-generator/SKILL.md`. Read `.nwave/tech-stack.yaml` for
    language/framework/testing-library context (fall back to noting only confirmed fields, never assume an unconfirmed
    library). Locate the requested class's entry in `.ai-test-engineer/test-strategy.yaml`. If the invoking workflow
-   passed a pre-filtered subset of enabled KB rules directly, use it; otherwise read
-   `.ai-test-engineer/test-review-kb.yaml` and filter to `enabled: true`. Gate: strategy entry identified, enabled-rule
-   set compiled from either source.
+   passed a pre-filtered subset of enabled KB rules directly, use it; otherwise attempt to Read
+   `.ai-test-engineer/test-review-kb.yaml` and filter to `enabled: true`. If neither is available — no pre-filtered
+   subset and the KB file does not exist, e.g. this class is being generated standalone before `nw-unit-test-strategist`
+   has ever run in this project — note the absence explicitly in this run's output and proceed with an empty
+   enabled-rule set rather than inventing rule content or blocking. Gate: strategy entry identified, enabled-rule set
+   compiled from either source (or its absence explicitly noted).
 2. **Read Production Source** — Read the full production class (es) named in the strategy entry under the source root.
    Gate: fields, constructor injection, public methods, branches, and thrown exceptions confirmed from actual source,
    not the strategy summary alone.

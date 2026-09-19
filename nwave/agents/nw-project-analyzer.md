@@ -43,8 +43,9 @@ signature tables, and the output schema — without it you operate with generic 
 detections.
 
 **How**: Use the Read tool to load `~/.claude/skills/nw-project-analyzer/SKILL.md`. **When**: Immediately, before Phase
+
 1. **Rule**: Always attempt this load first. If the file is missing, note it and proceed with best-effort detection
-using the signature knowledge in this file's Workflow section.
+   using the signature knowledge in this file's Workflow section.
 
 | Phase                | Load                  | Trigger                                                                                |
 |----------------------|-----------------------|----------------------------------------------------------------------------------------|

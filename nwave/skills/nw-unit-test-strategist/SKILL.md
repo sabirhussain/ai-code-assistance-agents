@@ -1,6 +1,6 @@
 ---
 name: nw-unit-test-strategist
-description: KB rule application map, mocking-strategy decision table, exclusion heuristics, and test-strategy.yaml output schema for Java/Spring unit-test planning
+description: KB rule application map, the generic Default KB Seed used to bootstrap a missing test-review-kb.yaml, mocking-strategy decision table, exclusion heuristics, and test-strategy.yaml output schema for Java/Spring unit-test planning
 user-invocable: false
 disable-model-invocation: true
 ---
@@ -151,3 +151,55 @@ confidently plan (e.g. dependency type couldn't be resolved) with a `note` and `
 behavior/boundary property excluded via the Serialization Testability Check (Section 3), tagged
 `reason: untestable_without_production_change` — this is a per-property exclusion, distinct from a whole class's
 `requires_tests: false` skip.
+
+## 7. Default KB Seed (Bootstrap Content)
+
+Use this exact content, verbatim, to create `.ai-test-engineer/test-review-kb.yaml` the first time Workflow Step 1
+(Gather Inputs) finds it missing. This is the only place severity values for TR-001..TR-007 are defined — Section 1's KB
+Rule Application Map deliberately omits severity (it maps rule → plan field, not rule → file content); do not attempt to
+derive severity from that table.
+
+The wording below is deliberately generic and tech-stack-agnostic — no Mockito, JUnit, or Spring API names appear
+anywhere in it. This file is written before any project-specific evidence exists, so it states each principle at the
+level of a universal testing concept (a partial test double, a mocked dependency, a framework context) rather than
+presupposing a specific library. Turning a rule into a concrete Java/Mockito code shape is `nw-unit-test-generator`'s
+job (its KB Rule -> Code Shape Map), not this seed's — the generic wording here loses nothing downstream.
+
+```yaml
+version: "1.0"
+rules:
+  - id: TR-001
+    description: Avoid a partial test double (spy) for a dependency unless the test genuinely needs part-real, part-stubbed behavior.
+    severity: medium
+    enabled: true
+  - id: TR-002
+    description: Avoid reaching into a class's private/internal implementation details to write or verify a test — test through its public contract.
+    severity: high
+    enabled: true
+  - id: TR-003
+    description: When verifying a call with a complex, multi-field argument passed to a mocked dependency, capture and assert on its actual content rather than using a loose wildcard/any-value matcher.
+    severity: medium
+    enabled: true
+  - id: TR-004
+    description: Prefer data-driven (parameterized) tests over multiple near-duplicate tests that differ only by literal input/output values.
+    severity: medium
+    enabled: true
+  - id: TR-005
+    description: Test observable behavior and outcomes, not internal implementation details or call ordering.
+    severity: high
+    enabled: true
+  - id: TR-006
+    description: Avoid mocking simple, side-effect-free objects (value objects, DTOs, stateless utilities) — exercise them directly instead.
+    severity: low
+    enabled: true
+  - id: TR-007
+    description: Avoid loading a full application/framework context for a test that only needs a narrow, unit-level scope.
+    severity: medium
+    enabled: true
+```
+
+Write this exactly once per project. The moment the file exists — bootstrapped here or created by any other means —
+every later run (this agent, the generator, the reviewer, the fixer) reads and evolves it as the shared KB. Never
+regenerate or overwrite it just because it looks incomplete or still generic; that judgment, and any move toward more
+specific, library-flavored rules, belongs to `nw-unit-test-reviewer`'s evidence-gated KB-edit mechanism, not to this
+bootstrap step.

@@ -151,7 +151,10 @@ its own to set `revisions_needed` regardless of every other finding's state.
 ## KB-Edit Governance Rule
 
 The KB file (`.ai-test-engineer/test-review-kb.yaml`) is the shared rule set every strategist and generator run depends
-on. Default to **no edit**. Only edit when all of the following hold:
+on. Before anything else, every confirmed finding faces one entry-gate question: **does this represent a reusable rule —
+a pattern likely to recur across other classes/tests in this project — or is it specific to this one case?** A
+case-specific finding stops here; it stays a plain finding in the report and never reaches the checklist below. Only a
+finding judged reusable proceeds. Default to **no edit** even then. Only edit when all of the following hold:
 
 1. **Evidence-driven** — The gap, redundancy, or inaccuracy is grounded in a finding that survived the reflection pass
    this run (or across recent runs cited in the report), not a hypothetical or one-off style preference.

@@ -68,9 +68,11 @@ At the start of execution, create these tasks using TaskCreate and follow them i
 
 1. **Gather Inputs** — Load `~/.claude/skills/nw-unit-test-reviewer/SKILL.md`. Read `.nwave/tech-stack.yaml` for
    language/framework/testing-library context. Locate the class's entry in `.ai-test-engineer/test-strategy.yaml`. If
-   the invoking workflow passed a pre-filtered subset of enabled KB rules directly, use it; otherwise read
-   `.ai-test-engineer/test-review-kb.yaml` and filter to `enabled: true`. Locate the generated test file (s) under the
-   test source root. Read the full production class (es) named in the strategy entry. Read
+   the invoking workflow passed a pre-filtered subset of enabled KB rules directly, use it; otherwise attempt to Read
+   `.ai-test-engineer/test-review-kb.yaml` and filter to `enabled: true`. If the file does not exist and no pre-filtered
+   subset was supplied, note its absence and proceed with zero enabled rules for this run's `kb_violation` evaluation
+   angle — the other six angles in Workflow Step 2 still run normally. Locate the generated test file (s) under the test
+   source root. Read the full production class (es) named in the strategy entry. Read
    `.ai-test-engineer/verify/build-verification.yaml` when it exists — when it doesn't (e.g. a standalone review run
    before any build-verify has executed), proceed with static-only review and note its absence. Gate: all six inputs
    resolved (or their absence explicitly noted), strategy entry identified.
@@ -89,9 +91,13 @@ At the start of execution, create these tasks using TaskCreate and follow them i
    from a real test run and can never be discarded; reflection may only enrich it with cross-referenced
    production-source context. Gate: every draft finding has a confirmed or discarded outcome logged; zero unverified
    findings carry into the report; every `execution_failure` finding survives.
-4. **Assess KB Gap** — Apply the skill's KB-edit governance rule to the confirmed findings only. Default answer is no
-   edit; only a genuine, evidence-backed gap, redundancy, or inaccuracy clears the bar. Gate: gap assessment recorded in
-   the report even when the answer is no edit.
+4. **Assess KB Gap** — For every confirmed finding, ask the entry-gate question first: does this represent a reusable
+   rule — a pattern likely to recur across other classes/tests in this project — or is it specific to this one case? If
+   specific-to-this-case, stop here for that finding: do nothing beyond the finding already in the report. If reusable,
+   proceed to the skill's KB-edit governance rule (evidence-driven, rare, scoped-to-one-entry, always-logged,
+   additive-first) before editing. Default answer is no edit; only a genuine, evidence-backed, reusable gap, redundancy,
+   or inaccuracy clears the bar. Gate: gap assessment recorded in the report even when the answer is no edit, and states
+   which findings were screened out as case-specific before the governance checklist was even applied.
 5. **Apply KB Edit (Rare)** — When the governance threshold is met, add, update, or delete exactly the one warranted
    entry in `.ai-test-engineer/test-review-kb.yaml` using Edit, and record the before/after state plus reason in the
    report's `kb_edit` section. Gate: the KB file changes only when this phase actually executes; the report always
@@ -158,7 +164,17 @@ preference).
 `severity: medium`, `enabled: true`, via Edit to `.ai-test-engineer/test-review-kb.yaml`. Report's `kb_edit` section
 logs the before/after and cites the two files as evidence.
 
-### Example 5: Ground-Truth Failure Overrides a Clean Static Read
+### Example 5: A Confirmed Violation That Isn't Reusable — No KB Edit
+
+A generated test for `UserController` stubs a return value with a slightly-off literal that happens to still pass, and
+the finding traces to a one-off copy-paste mistake in this single test method — nothing about it suggests the same
+mistake would recur on another class.
+-> Assess KB Gap asks the entry-gate question first: is this reusable? No — it's specific to this one test method, not a
+pattern. Stop there: the finding stays in the report as-is (routed to `nw-unit-test-issue-fixer` for correction), and
+the KB-edit governance checklist is never even consulted for it. `kb_gap_assessment.gap_found: false`, with the reason
+stating the finding was screened out as case-specific before the governance checklist applied.
+
+### Example 6: Ground-Truth Failure Overrides a Clean Static Read
 
 The static evaluation of `UserServiceImplTest.java` finds no traceability gaps, no KB violations, and every strategy
 item covered — by static reading alone, this would be `verdict: approved`. But
@@ -169,7 +185,7 @@ reason from `build-verification.yaml`), survives reflection unconditionally, and
 though every other angle was clean. The finding's `recommendation` routes the fixability judgment to
 `nw-unit-test-issue-fixer` rather than guessing here whether it's a test defect or a production-behavior mismatch.
 
-### Example 6: Mid-Task Request to Fix the Test Directly
+### Example 7: Mid-Task Request to Fix the Test Directly
 
 While reviewing, the invoking workflow asks the agent to "just fix the missing captor assertion yourself while you're in
 there."
