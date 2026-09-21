@@ -12,27 +12,35 @@ contains zero Mockito/JUnit/KB-rule content by design — that knowledge belongs
 
 ## 1. Leaf Agent Invocation Contract
 
-| Stage        | Leaf Agent                 | Reads                                                                                                             | Writes                                                                                                                        |
-|--------------|----------------------------|-------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| ANALYZE      | `nw-project-analyzer`      | repo manifests                                                                                                    | `.nwave/tech-stack.yaml` — **skipped entirely (no Task call) when this file already exists**, see Section 1a                  |
-| STRATEGIZE   | `nw-unit-test-strategist`  | `.nwave/tech-stack.yaml`, `.ai-test-engineer/test-review-kb.yaml`, production source                              | `.ai-test-engineer/test-strategy.yaml` — overwritten every run, by design (Section 1b)                                        |
-| GENERATE     | `nw-unit-test-generator`   | strategy entry, KB, production/existing test source                                                               | `src/test/java/**/*Test.java`                                                                                                 |
-| BUILD VERIFY | `nw-test-build-verifier`   | real build/test run                                                                                               | `.ai-test-engineer/verify/build-verification.yaml` (`build.status`, `tests.status`, `generated_tests.status`)                 |
-| REVIEW       | `nw-unit-test-reviewer`    | generated tests, production, strategy, KB, **this pass's `build-verification.yaml`**                              | a **new, non-overwriting** file under `.ai-test-engineer/review/` (`verdict` field) — filename is never fixed, see Section 1c |
-| FIX          | `nw-unit-test-issue-fixer` | the review file at the exact path the orchestrator captured from REVIEW's completion response, affected files, KB | edits flagged test file(s), `.ai-test-engineer/review/fix-report.yaml`                                                        |
+| Stage        | Leaf Agent                 | Reads                                                                                                             | Writes                                                                                                                                                                                                                                                             |
+|--------------|----------------------------|-------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ANALYZE      | `nw-project-analyzer`      | repo manifests                                                                                                    | `.nwave/tech-stack.yaml` — **skipped entirely (no Task call) when this file already exists, unless a rescan was requested for this run** (the word `rescan_tech_stack`, or plain language like "rescan tech stack" — no `key: true` syntax needed), see Section 1a |
+| STRATEGIZE   | `nw-unit-test-strategist`  | `.nwave/tech-stack.yaml`, `.ai-test-engineer/test-review-kb.yaml`, production source                              | `.ai-test-engineer/test-strategy.yaml` — overwritten every run, by design (Section 1b)                                                                                                                                                                             |
+| GENERATE     | `nw-unit-test-generator`   | strategy entry, KB, production/existing test source                                                               | `src/test/java/**/*Test.java`                                                                                                                                                                                                                                      |
+| BUILD VERIFY | `nw-test-build-verifier`   | real build/test run                                                                                               | `.ai-test-engineer/verify/build-verification.yaml` (`build.status`, `tests.status`, `generated_tests.status`)                                                                                                                                                      |
+| REVIEW       | `nw-unit-test-reviewer`    | generated tests, production, strategy, KB, **this pass's `build-verification.yaml`**                              | a **new, non-overwriting** file under `.ai-test-engineer/review/` (`verdict` field) — filename is never fixed, see Section 1c                                                                                                                                      |
+| FIX          | `nw-unit-test-issue-fixer` | the review file at the exact path the orchestrator captured from REVIEW's completion response, affected files, KB | edits flagged test file(s), `.ai-test-engineer/review/fix-report.yaml`                                                                                                                                                                                             |
 
 BUILD VERIFY is listed first because it now runs at the start of every loop pass, before that pass's REVIEW call — never
 as a single trailing step after the loop. The orchestrator invokes each leaf via `Task` by name, passing the target
 class (es) and any relevant file paths as context. It never performs a leaf's own job, and never reads beyond the
 specific status/verdict field it needs to decide what runs next.
 
-### 1a. ANALYZE Skip Rule
+### 1a. ANALYZE Skip Rule (and its Rescan Override)
 
-Before invoking `nw-project-analyzer`, attempt a plain Read of `.nwave/tech-stack.yaml`. If it exists, skip the Task
-call entirely for this run — the file is treated as current, with no staleness check (the same rule the
-strategist/generator already apply when they consume it). If it does not exist, invoke `nw-project-analyzer` as normal.
-This is a structural existence check, not a domain judgment, so it stays consistent with Core Principle 1 (domain-blind
-by design).
+First, scan the invoking context's instructions for a rescan request — recognize the bare word/flag `rescan_tech_stack`,
+or plain language such as "rescan tech stack" / "rescan the tech stack" / "rescan teck stack" (tolerate an obvious typo
+of the same request). No `key: true` syntax is required; presence of the request in whatever form is enough. If found,
+invoke `nw-project-analyzer` unconditionally — this lets a caller force a fresh detection pass after the project's
+dependencies, build tool, or framework versions change over time, even though `.nwave/tech-stack.yaml` still exists from
+a prior run. Record `analyze_rescan_requested: true` in `state.yaml`'s notes for this run.
+
+Otherwise, attempt a plain Read of `.nwave/tech-stack.yaml`. If it exists, skip the Task call entirely for this run —
+the file is treated as current, with no staleness check on its own (the same rule the strategist/generator already apply
+when they consume it; staleness detection is exactly what the rescan request exists for). If it does not exist, invoke
+`nw-project-analyzer` as normal. Both the existence check and the rescan override are structural, not a domain judgment,
+so this stays consistent with Core Principle 1 (domain-blind by design) — the orchestrator never inspects tech-stack
+*content* to decide staleness, only whether the caller asked for a rescan.
 
 ### 1b. STRATEGIZE Overwrite Rule
 
