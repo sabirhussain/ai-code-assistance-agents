@@ -87,10 +87,13 @@ At the start of execution, create these tasks using TaskCreate and follow them i
    file, touching only the method (s) the finding names. Make zero edits for confirmed escalations,
    `skipped_no_change_needed`, or `skipped_out_of_scope` outcomes. Gate: test-source edits map 1:1 to confirmed
    draft-fix outcomes; zero production-file diffs; zero edits to a test method not named in a finding.
-5. **Emit Fix Report** — Create `.ai-test-engineer/review/` if absent. Write every finding's outcome, reasoning, and the
-   reflection log to `.ai-test-engineer/review/fix-report.yaml` per the skill's schema, overwriting any prior run. Gate:
-   exactly one file written at that exact path, valid YAML, matches schema, one outcome per input finding (or the single
-   no-op entry when the review was approved and empty).
+5. **Emit Fix Report** — Create `.ai-test-engineer/review/` if absent (and, when creating it, read repo-root
+   `.gitignore`: if present and missing a `.ai-test-engineer/` entry, append one; if no `.gitignore` exists, leave the
+   repo as-is). Write every finding's outcome, reasoning, and the reflection log to
+   `.ai-test-engineer/review/fix-report.yaml` per the skill's schema, overwriting any prior run. Gate: exactly one file
+   written at that exact path, valid YAML, matches schema, one outcome per input finding (or the single no-op entry when
+   the review was approved and empty), `.gitignore` either already covers `.ai-test-engineer/`, was updated, or does not
+   exist.
 
 ## Critical Rules
 

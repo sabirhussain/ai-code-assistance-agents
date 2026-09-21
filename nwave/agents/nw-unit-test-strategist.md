@@ -72,11 +72,13 @@ At the start of execution, create these tasks using TaskCreate and follow them i
 1. **Gather Inputs** — Load `~/.claude/skills/nw-unit-test-strategist/SKILL.md`. Read `.nwave/tech-stack.yaml` for
    language/framework/testing-library context; if absent, note it and fall back to reading the build manifest directly.
    Attempt to Read `.ai-test-engineer/test-review-kb.yaml`. If it does not exist, create `.ai-test-engineer/` if absent
-   and Write it once with the fixed, generic default seed from this skill's Default KB Seed section (`version: "1.0"`,
-   `rules:` TR-001 through TR-007 verbatim, each `enabled: true`), then proceed using that just-written set — do not
-   re-check for its existence again this run. If it already exists, never overwrite it — read it as-is, however it got
-   there. Either way, filter to `enabled: true` rules only. Gate: stack context loaded (or its absence noted), KB file
-   confirmed present (freshly bootstrapped or pre-existing), enabled-rule set compiled.
+   (and, when creating it, read repo-root `.gitignore`: if present and missing a `.ai-test-engineer/` entry, append one;
+   if no `.gitignore` exists, leave the repo as-is) and Write it once with the fixed, generic default seed from this
+   skill's Default KB Seed section (`version: "1.0"`, `rules:` TR-001 through TR-007 verbatim, each `enabled: true`),
+   then proceed using that just-written set — do not re-check for its existence again this run. If it already exists,
+   never overwrite it — read it as-is, however it got there. Either way, filter to `enabled: true` rules only. Gate:
+   stack context loaded (or its absence noted), KB file confirmed present (freshly bootstrapped or pre-existing),
+   enabled-rule set compiled, `.gitignore` either already covers `.ai-test-engineer/`, was updated, or does not exist.
 2. **Discover Scope** — Glob the source root implied by tech-stack.yaml (default `src/main/java/**/*.java`) for
    candidate classes. Gate: candidate class list compiled with file paths.
 3. **Read & Ground Each Class** — Read each candidate class's full source. Record its public methods,

@@ -102,11 +102,13 @@ At the start of execution, create these tasks using TaskCreate and follow them i
    entry in `.ai-test-engineer/test-review-kb.yaml` using Edit, and record the before/after state plus reason in the
    report's `kb_edit` section. Gate: the KB file changes only when this phase actually executes; the report always
    states whether it ran.
-6. **Emit Review Report** — Create `.ai-test-engineer/review/` if absent. Glob it for existing `current-review-*.yaml`
-   files and compute this run's filename per the skill's Report File Naming rule (never the prior run's name). Write the
-   confirmed findings, the reflection log, and any KB edit to that new path per the skill's schema. State the exact
-   filename explicitly in this run's completion response. Gate: exactly one new file written, never overwriting an
-   existing one, valid YAML, matches schema, its exact path stated back to the caller.
+6. **Emit Review Report** — Create `.ai-test-engineer/review/` if absent (and, when creating it, read repo-root
+   `.gitignore`: if present and missing a `.ai-test-engineer/` entry, append one; if no `.gitignore` exists, leave the
+   repo as-is). Glob it for existing `current-review-*.yaml` files and compute this run's filename per the skill's
+   Report File Naming rule (never the prior run's name). Write the confirmed findings, the reflection log, and any KB
+   edit to that new path per the skill's schema. State the exact filename explicitly in this run's completion response.
+   Gate: exactly one new file written, never overwriting an existing one, valid YAML, matches schema, its exact path
+   stated back to the caller, `.gitignore` either already covers `.ai-test-engineer/`, was updated, or does not exist.
 
 ## Critical Rules
 

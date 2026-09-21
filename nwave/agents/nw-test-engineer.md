@@ -68,9 +68,12 @@ the loop rule restated in this file's Workflow section.
 At the start of execution, create these tasks using TaskCreate and follow them in order:
 
 1. **Initialize State** — Load `~/.claude/skills/nw-test-engineer/SKILL.md`. Read `.ai-test-engineer/state.yaml`. If
-   missing, Write it with defaults (`phase: initialization, iteration: 0, max_iterations: 3, status: not_started`) per
-   the skill's schema. Resolve `max_iterations` using the skill's precedence order (orchestrator-config override, then
-   the file's existing value, then default `3`). Gate: `state.yaml` exists; `max_iterations` resolved.
+   missing, create `.ai-test-engineer/` if absent (and, when creating it, read repo-root `.gitignore`: if present and
+   missing a `.ai-test-engineer/` entry, append one; if no `.gitignore` exists, leave the repo as-is) and Write
+   `state.yaml` with defaults (`phase: initialization, iteration: 0, max_iterations: 3, status: not_started`) per the
+   skill's schema. Resolve `max_iterations` using the skill's precedence order (orchestrator-config override, then the
+   file's existing value, then default `3`). Gate: `state.yaml` exists; `max_iterations` resolved; `.gitignore` either
+   already covers `.ai-test-engineer/`, was updated, or does not exist.
 2. **ANALYZE** — Update state to `phase: analyze, status: in_progress`, persist. Scan the invoking context's
    instructions for a rescan request — the bare word/flag `rescan_tech_stack`, or plain language like "rescan tech
    stack"/"rescan the tech stack"; no `key: true` syntax is required, presence of the request is enough. If found,

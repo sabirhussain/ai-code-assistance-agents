@@ -66,7 +66,10 @@ status: not_started | in_progress | completed | failed
 target_classes: []       # optional, echoes the class(es) named for this run
 ```
 
-Defaults on first run (file absent): `phase: initialization, iteration: 0, max_iterations: 3, status: not_started`.
+Defaults on first run (file absent): create `.ai-test-engineer/` if absent (appending a `.ai-test-engineer/` entry to
+repo-root `.gitignore` when it exists and lacks one — leave `.gitignore` alone if it doesn't exist, mirroring
+`nw-project-analyzer`'s existing `.nwave/` pattern), then write
+`phase: initialization, iteration: 0, max_iterations: 3, status: not_started`.
 
 ## 3. Phase Transition Table
 

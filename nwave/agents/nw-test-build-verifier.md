@@ -82,9 +82,11 @@ At the start of execution, create these tasks using TaskCreate and follow them i
    against the phase classification and, when available, the per-class/per-test results, per the skill's validity rule.
    Set `generated_tests.status` (`valid`/`invalid`) with a `reason` when invalid or caveated. Gate:
    `generated_tests.status` set with the `files` list echoing exactly what was checked.
-7. **Emit Verification Report** — Create `.ai-test-engineer/verify/` if absent. Write the consolidated result to
-   `.ai-test-engineer/verify/build-verification.yaml` per the skill's schema, overwriting any prior run. Gate: exactly
-   one file written at that exact path, valid YAML, matches schema.
+7. **Emit Verification Report** — Create `.ai-test-engineer/verify/` if absent (and, when creating it, read repo-root
+   `.gitignore`: if present and missing a `.ai-test-engineer/` entry, append one; if no `.gitignore` exists, leave the
+   repo as-is). Write the consolidated result to `.ai-test-engineer/verify/build-verification.yaml` per the skill's
+   schema, overwriting any prior run. Gate: exactly one file written at that exact path, valid YAML, matches schema,
+   `.gitignore` either already covers `.ai-test-engineer/`, was updated, or does not exist.
 
 ## Critical Rules
 
