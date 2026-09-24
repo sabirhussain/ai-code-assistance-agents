@@ -36,14 +36,14 @@ files, confirms values with you, writes the config, and updates `.gitignore`.
 
 **Auto-detects**:
 
-| File found | Detected stack |
-|---|---|
-| `pom.xml` | Java / Spring Boot (Maven) |
-| `build.gradle` / `build.gradle.kts` | Java / Spring Boot (Gradle) |
-| `package.json` | Node.js / TypeScript |
-| `pyproject.toml` / `requirements.txt` | Python |
-| `go.mod` | Go |
-| *(none of the above)* | Generic |
+| File found                            | Detected stack              |
+|---------------------------------------|-----------------------------|
+| `pom.xml`                             | Java / Spring Boot (Maven)  |
+| `build.gradle` / `build.gradle.kts`   | Java / Spring Boot (Gradle) |
+| `package.json`                        | Node.js / TypeScript        |
+| `pyproject.toml` / `requirements.txt` | Python                      |
+| `go.mod`                              | Go                          |
+| *(none of the above)*                 | Generic                     |
 
 The generated config is **gitignored** — each developer runs this once per repo. Re-run at any time to update.
 
@@ -77,7 +77,8 @@ Performs intelligent code reviews focused on architecture, security, and testabi
 5. 🟢 **Testability** - Hidden dependencies, static calls; prefer testability in complex trade-offs
 6. 🟢 **Maintainability** - DRY, KISS, complexity, method size
 7. 🔵 **Modernization** - JDK improvements, best practices (version-aware)
-8. ⚪ **Backward Compatibility** *(opt-in)* - API breaks, REST contract changes, DTO/serialization, config renames, crypto algorithm changes — say *"check backward compatibility"* or *"breaking changes"*
+8. ⚪ **Backward Compatibility** *(opt-in)* - API breaks, REST contract changes, DTO/serialization, config renames,
+   crypto algorithm changes — say *"check backward compatibility"* or *"breaking changes"*
 
 ## 📦 What Gets Installed
 

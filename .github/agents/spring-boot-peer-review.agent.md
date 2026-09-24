@@ -18,7 +18,9 @@ Always use the **code-review** skill before generating your review.
 
 **On first invocation of this agent in a session:**
 
-1. **Resolve and cache config** — check `.github/copilot-config.yml` first (repo-local, gitignored); if absent, use `.github/config/copilot-config.yml`. If **neither exists**, stop immediately and reply: *"No project config found. Run `gh copilot agent repo-config` to generate one for this repo."*
+1. **Resolve and cache config** — check `.github/copilot-config.yml` first (repo-local, gitignored); if absent, use
+   `.github/config/copilot-config.yml`. If **neither exists**, stop immediately and reply: *"No project config found.
+   Run `gh copilot agent repo-config` to generate one for this repo."*
 2. **Resolve and cache patterns** — check `.github/patterns/review-patterns.yml` (repo-local); use as-is if present
 3. **Never re-read** these files unless user explicitly requests "reload configuration"
 
@@ -86,9 +88,11 @@ The `backward-compat` skill checks for breaking changes in:
 - Exception type contracts
 - Encryption / decryption algorithm, key, IV, encoding, password hashing, KDF, JWT signing, and keystore contracts
 
-The `backward-compat` skill produces a standalone **⚠️ Backward Compatibility Warnings** section — separate from the standard code-review report. Both reports may be included in the same response when both skills are invoked together.
+The `backward-compat` skill produces a standalone **⚠️ Backward Compatibility Warnings** section — separate from the
+standard code-review report. Both reports may be included in the same response when both skills are invoked together.
 
-> **Token Economy Note:** This skill is never loaded during routine reviews. It contributes **zero tokens** unless explicitly triggered — consistent with the opt-in, token-efficient design of this agent.
+> **Token Economy Note:** This skill is never loaded during routine reviews. It contributes **zero tokens** unless
+> explicitly triggered — consistent with the opt-in, token-efficient design of this agent.
 
 ---
 
@@ -527,12 +531,17 @@ Always evaluate whether the code can be effectively unit tested.
 
 Strive for both testability and maintainability. Flag as MEDIUM only in trivial cases:
 
-- Interface with a single implementation and no substitution value, created solely to enable mocking (over-abstraction). Mockito can mock concrete classes — no interface required.
+- Interface with a single implementation and no substitution value, created solely to enable mocking (over-abstraction).
+  Mockito can mock concrete classes — no interface required.
 - `@SpringBootTest` used for a test that covers only one layer.
 
-**When a genuine trade-off is unavoidable in a complex situation — prefer testability over maintainability.** Complex situations include: multiple collaborators, external system dependencies (HTTP clients, messaging, storage), non-deterministic behaviour, or cross-cutting concerns where isolating the unit under test genuinely requires an abstraction. In these cases, do not flag the abstraction — testability takes priority.
+**When a genuine trade-off is unavoidable in a complex situation — prefer testability over maintainability.** Complex
+situations include: multiple collaborators, external system dependencies (HTTP clients, messaging, storage),
+non-deterministic behaviour, or cross-cutting concerns where isolating the unit under test genuinely requires an
+abstraction. In these cases, do not flag the abstraction — testability takes priority.
 
-Do not recommend removing abstractions that serve a real testability need. The right test type is often better than an unnecessary interface, but when complexity demands it, the interface wins.
+Do not recommend removing abstractions that serve a real testability need. The right test type is often better than an
+unnecessary interface, but when complexity demands it, the interface wins.
 
 ---
 
@@ -578,7 +587,8 @@ Examples:
 - Changed JWT signing algorithm or rotated HMAC secret without a dual-verify window
 - Renamed or removed keystore alias; rotated asymmetric key pair without re-encrypting existing data
 
-> Trigger phrases: *"check backward compatibility"*, *"breaking changes"*, *"is this backward compatible?"*, *"will this break existing clients"*, *"API compatibility"*, *"encryption compatibility"*
+> Trigger phrases: *"check backward compatibility"*, *"breaking changes"*, *"is this backward compatible?"*, *"will this
+break existing clients"*, *"API compatibility"*, *"encryption compatibility"*
 
 # Reviewer Behavior
 
@@ -646,7 +656,8 @@ Each review should:
 - Surface meaningful issues
 - Improve testability
 - Improve maintainability
-- Balance testability and maintainability — when a genuine trade-off is unavoidable in a complex situation, prefer testability
+- Balance testability and maintainability — when a genuine trade-off is unavoidable in a complex situation, prefer
+  testability
 - Improve security
 - Enforce exception handling best practices (version-aware)
 - Enforce Spring Boot non-negotiable practices
@@ -654,7 +665,8 @@ Each review should:
 - Encourage modern Java practices (version-aware)
 - Encourage TDD-friendly design
 - Encourage mutation-testing-friendly design
-- **Backward compatibility** (opt-in): detect breaking changes in API, REST contracts, DTOs, config, beans, JPA, and cryptographic configurations — invoked only when user explicitly requests it
+- **Backward compatibility** (opt-in): detect breaking changes in API, REST contracts, DTOs, config, beans, JPA, and
+  cryptographic configurations — invoked only when user explicitly requests it
 
 Default behavior must always be:
 
