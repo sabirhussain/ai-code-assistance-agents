@@ -40,9 +40,13 @@ improving output consistency.
 - SOLID principle violation patterns (SRP, OCP, LSP, ISP, DIP)
 - DRY and KISS violation patterns
 - Spring DI anti-patterns (field injection, service locator, circular dependencies)
-- Testability anti-patterns (hidden dependencies, static calls, hard-coded values, over-abstraction, wrong test type, mutation-hostile patterns)
-- Exception handling patterns (empty catch, swallowed exceptions, broad catch, checked exceptions in Spring components, missing `@ControllerAdvice`, raw stack trace to client, wrong log level — version-aware: includes `ProblemDetail` RFC 9457 for Spring Boot 3.x)
-- Spring Boot non-negotiable patterns (`@Transactional` placement, OSIV, `@ConfigurationProperties`, SLF4J enforcement, Actuator exposure, `@Valid`, null returns, profile-based config)
+- Testability anti-patterns (hidden dependencies, static calls, hard-coded values, over-abstraction, wrong test type,
+  mutation-hostile patterns)
+- Exception handling patterns (empty catch, swallowed exceptions, broad catch, checked exceptions in Spring components,
+  missing `@ControllerAdvice`, raw stack trace to client, wrong log level — version-aware: includes `ProblemDetail` RFC
+  9457 for Spring Boot 3.x)
+- Spring Boot non-negotiable patterns (`@Transactional` placement, OSIV, `@ConfigurationProperties`, SLF4J enforcement,
+  Actuator exposure, `@Valid`, null returns, profile-based config)
 - Security patterns (secrets detection, logging risks)
 - JDK modernization suggestions by version (8, 11, 17, 21)
 - Report template structure
@@ -53,7 +57,9 @@ improving output consistency.
 - Consistent finding generation
 - Structured detection rules and recommendations
 - Eliminates 500+ lines of prose examples from skill file
-- Extended in August 2026: added exception handling, Spring Boot non-negotiable, and enhanced testability pattern categories — coverage increase is intentional; pattern file is cached so per-invocation cost is unaffected after first session read
+- Extended in August 2026: added exception handling, Spring Boot non-negotiable, and enhanced testability pattern
+  categories — coverage increase is intentional; pattern file is cached so per-invocation cost is unaffected after first
+  session read
 
 ### 3. `.github/skills/backward-compat/backward-compat.skill.md` ← NEW (August 17, 2026)
 
@@ -68,11 +74,14 @@ improving output consistency.
 - Spring bean injection contract checks (`@Bean`, `@Qualifier` names)
 - JPA / persistence schema contract checks
 - Exception contract checks
-- Cryptographic backward compatibility (algorithm swaps, key size, cipher mode, padding, IV handling, output encoding, password hashing, KDF, JWT signing, keystore aliases, asymmetric key rotation)
+- Cryptographic backward compatibility (algorithm swaps, key size, cipher mode, padding, IV handling, output encoding,
+  password hashing, KDF, JWT signing, keystore aliases, asymmetric key rotation)
 
 **Token Economy Design:**
 
-This skill is **opt-in and explicit-only**. It is never loaded during routine `code-review` invocations. It contributes **zero tokens** to session cost unless the user explicitly requests a backward compatibility audit. This keeps routine review costs unchanged.
+This skill is **opt-in and explicit-only**. It is never loaded during routine `code-review` invocations. It contributes
+**zero tokens** to session cost unless the user explicitly requests a backward compatibility audit. This keeps routine
+review costs unchanged.
 
 ---
 
