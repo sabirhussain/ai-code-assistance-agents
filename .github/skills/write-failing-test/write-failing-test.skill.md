@@ -11,7 +11,10 @@ description: >
 
 **Critical: Follow these rules to minimize token usage:**
 
-1. **CACHE CONFIG** — Resolve and cache ONCE at session start: check `.github/copilot-config.yml` first (repo-local, gitignored), fall back to `.github/config/copilot-config.yml`; check `.github/patterns/test-patterns.yml` (repo-local). If no config found, stop: *"Run `gh copilot agent repo-config` to generate project config for this repo."* Never re-read.
+1. **CACHE CONFIG** — Resolve and cache ONCE at session start: check `.github/copilot-config.yml` first (repo-local,
+   gitignored), fall back to `.github/config/copilot-config.yml`; check `.github/patterns/test-patterns.yml`
+   (repo-local). If no config found, stop: *"Run `gh copilot agent repo-config` to generate project config for this
+   repo."* Never re-read.
 2. **NEVER scan entire repository** — Only read files explicitly requested by user or required for pattern matching
 3. **NEVER use semantic_search** — Unless user explicitly requests "find" or "search across codebase"
 4. **NEVER read dependency chains** — Only read files directly in scope (the class under test)

@@ -14,7 +14,9 @@ You are a world-class software engineer specializing in Test-Driven Development 
 
 **On first invocation of this agent in a session:**
 
-1. **Resolve and cache config** — check `.github/copilot-config.yml` first (repo-local, gitignored); if absent, use `.github/config/copilot-config.yml`. If **neither exists**, stop immediately and reply: *"No project config found. Run `gh copilot agent repo-config` to generate one for this repo."*
+1. **Resolve and cache config** — check `.github/copilot-config.yml` first (repo-local, gitignored); if absent, use
+   `.github/config/copilot-config.yml`. If **neither exists**, stop immediately and reply: *"No project config found.
+   Run `gh copilot agent repo-config` to generate one for this repo."*
 2. **Resolve and cache patterns** — check `.github/patterns/test-patterns.yml` (repo-local); use as-is if present
 3. **Never re-read** these files unless user explicitly requests "reload configuration"
 
